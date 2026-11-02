@@ -4,7 +4,7 @@ import AxeBuilder from "@axe-core/playwright";
 test("workflow supports all stages and keyboard navigation", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await expect(page).toHaveTitle(/IAM Crawler/);
   for (const name of ["Browse", "Understand", "Verify", "Discover"]) {
     const tab = page.getByRole("tab", { name: new RegExp(name) });
@@ -25,7 +25,7 @@ test("workflow supports all stages and keyboard navigation", async ({
 test("offer decisions and filters stay coherent during quick changes", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.locator('[data-offer="pair"]').click();
   await expect(page.locator("#explanation-title")).toHaveText(
     "Two discs are a different quantity.",
@@ -52,7 +52,7 @@ test("motion respects reduced preference and the pause control persists", async 
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("./");
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
   await expect(
     page.getByRole("button", { name: "Play animations" }),
@@ -76,7 +76,7 @@ test("mobile navigation, disclosure and layouts work without page overflow", asy
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Open navigation" }).click();
   await expect(
     page.getByRole("navigation", { name: "Mobile navigation" }),
@@ -110,12 +110,15 @@ test("example download has the real output schema and explicit illustrative data
   page,
   request,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   const downloadEvent = page.waitForEvent("download");
   await page.getByRole("link", { name: "Download an example CSV" }).click();
   const download = await downloadEvent;
   expect(download.suggestedFilename()).toBe("illustrative-offers.csv");
-  const response = await request.get("/examples/illustrative-offers.csv");
+  const href = await page
+    .getByRole("link", { name: "Download an example CSV" })
+    .getAttribute("href");
+  const response = await request.get(new URL(href!, page.url()).href);
   expect(response.ok()).toBe(true);
   const text = await response.text();
   const lines = text.trim().split(/\r?\n/);
@@ -140,7 +143,7 @@ test("page has no serious accessibility violations or runtime errors", async ({
 }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("./");
   await page.evaluate(async () => {
     await document.fonts.ready;
     await Promise.all(

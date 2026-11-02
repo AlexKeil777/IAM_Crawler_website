@@ -5,17 +5,44 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   reporter: "list",
-  use: { baseURL: "http://127.0.0.1:5173", trace: "retain-on-failure" },
+  use: { trace: "retain-on-failure" },
   projects: [
     {
-      name: "chrome",
-      use: { ...devices["Desktop Chrome"], channel: "chrome" },
+      name: "development",
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        baseURL: "http://127.0.0.1:5173/",
+      },
+    },
+    {
+      name: "production-root",
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        baseURL: "http://127.0.0.1:4173/",
+      },
+    },
+    {
+      name: "github-pages-path",
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        baseURL: "http://127.0.0.1:4173/IAM_Crawler_website/",
+      },
     },
   ],
-  webServer: {
-    command:
-      "node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5173 --strictPort",
-    url: "http://127.0.0.1:5173",
-    reuseExistingServer: true,
-  },
+  webServer: [
+    {
+      command:
+        "node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 5173 --strictPort",
+      url: "http://127.0.0.1:5173",
+      reuseExistingServer: true,
+    },
+    {
+      command: "node scripts/serve-built.mjs",
+      url: "http://127.0.0.1:4173/IAM_Crawler_website/",
+      reuseExistingServer: true,
+    },
+  ],
 });

@@ -6,6 +6,10 @@ type Particle = {
   seed: number;
   size: number;
   copper: boolean;
+  offsetX: number;
+  offsetY: number;
+  velocityX: number;
+  velocityY: number;
 };
 
 export class ParticleRotor {
@@ -20,6 +24,7 @@ export class ParticleRotor {
   private visible = true;
   private pointer = { x: 0, y: 0 };
   private pointerTarget = { x: 0, y: 0 };
+  private cursor = { x: 0, y: 0, active: false };
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d", { alpha: true });
@@ -33,7 +38,13 @@ export class ParticleRotor {
       { rootMargin: "100px" },
     ).observe(canvas);
     canvas.addEventListener("pointermove", (event) => {
+      if (event.pointerType === "touch" || this.paused) return;
       const rect = canvas.getBoundingClientRect();
+      this.cursor = {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+        active: true,
+      };
       this.pointerTarget = {
         x: (event.clientX - rect.left) / rect.width - 0.5,
         y: (event.clientY - rect.top) / rect.height - 0.5,
@@ -41,6 +52,13 @@ export class ParticleRotor {
     });
     canvas.addEventListener("pointerleave", () => {
       this.pointerTarget = { x: 0, y: 0 };
+      this.cursor.active = false;
+    });
+    canvas.addEventListener("pointercancel", () => {
+      this.cursor.active = false;
+    });
+    window.addEventListener("blur", () => {
+      this.cursor.active = false;
     });
     document.addEventListener("visibilitychange", () => this.schedule());
   }
@@ -84,6 +102,10 @@ export class ParticleRotor {
         seed: random(),
         size: 0.42 + random() * 0.7,
         copper: random() > 0.9,
+        offsetX: 0,
+        offsetY: 0,
+        velocityX: 0,
+        velocityY: 0,
       });
     }
     // Edge rings make a mechanical object legible without drawing a solid surface.
@@ -97,6 +119,10 @@ export class ParticleRotor {
           seed: random(),
           size: 0.75,
           copper: false,
+          offsetX: 0,
+          offsetY: 0,
+          velocityX: 0,
+          velocityY: 0,
         });
       }
     }
@@ -115,6 +141,13 @@ export class ParticleRotor {
 
   setPaused(paused: boolean) {
     this.paused = paused;
+    if (paused) {
+      this.cursor.active = false;
+      this.pointerTarget = { x: 0, y: 0 };
+      this.particles.forEach((p) => {
+        p.offsetX = p.offsetY = p.velocityX = p.velocityY = 0;
+      });
+    }
     this.schedule();
     if (paused) this.draw();
   }
@@ -137,12 +170,12 @@ export class ParticleRotor {
       this.last = timestamp;
       this.pointer.x += (this.pointerTarget.x - this.pointer.x) * 0.035;
       this.pointer.y += (this.pointerTarget.y - this.pointer.y) * 0.035;
-      this.draw();
+      this.draw(delta);
     }
     this.frame = requestAnimationFrame((next) => this.tick(next));
   }
 
-  private draw() {
+  private draw(delta = 0) {
     const ctx = this.ctx;
     if (!ctx || !this.width || !this.height) return;
     ctx.clearRect(0, 0, this.width, this.height);
@@ -159,6 +192,8 @@ export class ParticleRotor {
       sz = Math.sin(turn);
     const centerX = this.width * 0.48;
     const centerY = this.height * 0.51;
+    const radius = Math.max(55, Math.min(100, this.width * 0.17));
+    const damping = Math.exp(-5.5 * delta);
     for (const p of this.particles) {
       let px = p.x * cz - p.y * sz;
       let py = p.x * sz + p.y * cz;
@@ -176,8 +211,35 @@ export class ParticleRotor {
       px += dissolve * (120 + p.seed * 130);
       py -= dissolve * (70 + Math.sin(p.seed * 50 + t * 0.25) * 70);
       const perspective = 700 / (700 + pz);
-      const x = centerX + px * scale * perspective;
-      const y = centerY + py * scale * perspective;
+      const baseX = centerX + px * scale * perspective;
+      const baseY = centerY + py * scale * perspective;
+      if (delta > 0 && !this.paused) {
+        let forceX = 0,
+          forceY = 0;
+        if (this.cursor.active) {
+          const dx = baseX + p.offsetX - this.cursor.x;
+          const dy = baseY + p.offsetY - this.cursor.y;
+          const distance = Math.hypot(dx, dy);
+          if (distance < radius) {
+            const angle =
+              distance > 0.1 ? Math.atan2(dy, dx) : p.seed * Math.PI * 2;
+            const force = (1 - distance / radius) ** 2 * 4400;
+            // A little tangential variation makes the scatter feel like loose dust.
+            const swirl = (p.seed - 0.5) * 0.65;
+            forceX = (Math.cos(angle) - Math.sin(angle) * swirl) * force;
+            forceY = (Math.sin(angle) + Math.cos(angle) * swirl) * force;
+          }
+        }
+        // A damped spring brings each particle back to its moving disc position.
+        p.velocityX =
+          (p.velocityX + (forceX - p.offsetX * 12) * delta) * damping;
+        p.velocityY =
+          (p.velocityY + (forceY - p.offsetY * 12) * delta) * damping;
+        p.offsetX += p.velocityX * delta;
+        p.offsetY += p.velocityY * delta;
+      }
+      const x = baseX + p.offsetX;
+      const y = baseY + p.offsetY;
       const depth = Math.max(0.28, Math.min(0.98, 0.68 + pz / 450));
       const alpha = depth * (1 - dissolve) * (0.7 + p.seed * 0.3);
       ctx.fillStyle =
