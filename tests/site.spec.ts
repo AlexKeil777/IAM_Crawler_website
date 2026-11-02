@@ -23,12 +23,21 @@ test("the page has three focused sections and the requested hero copy", async ({
 }) => {
   await page.goto("./");
   await expect(page.locator("main > section")).toHaveCount(3);
-  await expect(page.locator("#home h1")).toHaveText(
+  await expect(page.locator("#hero-title .crawl-line .line-text")).toHaveText([
+    "Crawl efficiently",
+    "Crawl reliably",
+    "Crawl flexibly",
+    "Crawl intelligently",
+  ]);
+  for (const [index, line] of (
+    await page.locator("#hero-title .crawl-line").all()
+  ).entries()) {
+    await expect(line).toHaveAttribute("data-line-order", String(index));
+  }
+  await expect(page.locator("#home")).not.toContainText(
     "The intelligent IAM crawler",
   );
-  await expect(
-    page.locator("#home").getByText("powered by AI", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator("#home")).not.toContainText("powered by AI");
   await expect(page.locator("#explanation")).toContainText(/representative/i);
   await expect(page.locator("#explanation")).toContainText(/BMW/);
   await expect(page.locator("#contact-form")).toHaveAttribute(
@@ -40,6 +49,63 @@ test("the page has three focused sections and the requested hero copy", async ({
     /post/i,
   );
   await expect(page.locator("body")).not.toContainText("Form changes.");
+});
+
+test("hero lines finish revealing in order and reduced motion shows all immediately", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    const state = window as typeof window & {
+      crawlRevealOrder: { index: number; time: number }[];
+    };
+    state.crawlRevealOrder = [];
+    const observe = (time: number) => {
+      document
+        .querySelectorAll("#hero-title .crawl-line")
+        .forEach((line, index) => {
+          const text = line.querySelector(".line-text")!;
+          if (
+            line.getAttribute("data-revealed") === "true" &&
+            Number(getComputedStyle(text).opacity) >= 0.99 &&
+            !state.crawlRevealOrder.some((entry) => entry.index === index)
+          ) {
+            state.crawlRevealOrder.push({ index, time });
+          }
+        });
+      if (state.crawlRevealOrder.length < 4) requestAnimationFrame(observe);
+    };
+    requestAnimationFrame(observe);
+  });
+  await page.goto("./");
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          (
+            window as typeof window & {
+              crawlRevealOrder: { index: number; time: number }[];
+            }
+          ).crawlRevealOrder.map((entry) => entry.index),
+        ),
+      { timeout: 12000 },
+    )
+    .toEqual([0, 1, 2, 3]);
+  const times = await page.evaluate(() =>
+    (
+      window as typeof window & { crawlRevealOrder: { time: number }[] }
+    ).crawlRevealOrder.map((entry) => entry.time),
+  );
+  expect(times[1]).toBeGreaterThan(times[0]);
+  expect(times[2]).toBeGreaterThan(times[1]);
+  expect(times[3]).toBeGreaterThan(times[2]);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
+  for (const line of await page.locator("#hero-title .crawl-line").all()) {
+    await expect(line).toHaveAttribute("data-revealed", "true");
+    await expect(line.locator(".line-text")).toHaveCSS("opacity", "1");
+  }
 });
 
 test("contact form validates required fields before sending", async ({
@@ -138,39 +204,16 @@ test("motion respects reduced preference and the pause control persists", async 
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
-  const background = page.locator(".automotive-background");
-  const part = background.locator(".floating-part").first();
-  const artwork = part.locator("svg.part-art");
-  await expect(background).toHaveAttribute("aria-hidden", "true");
-  await expect(background).toHaveAttribute("inert", "");
-  await expect(background).toHaveCSS("pointer-events", "none");
-  await expect(artwork).toHaveCSS("pointer-events", "none");
-  for (const type of ["brake-disc", "piston", "wipers", "wheel"]) {
-    expect(
-      await background.locator(`.floating-part[data-part="${type}"]`).count(),
-    ).toBeGreaterThan(0);
-  }
-  await expect(part).toHaveCSS("animation-name", "none");
-  await expect(artwork).toHaveCSS("animation-name", "none");
+  await expect(page.locator(".automotive-background")).toHaveCount(0);
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
   await expect(
     page.getByRole("button", { name: "Play animations" }),
   ).toBeVisible();
   await expect(page.locator("h1")).toHaveCSS("opacity", "1");
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await expect(part).not.toHaveCSS("animation-name", "none");
-  await expect(artwork).not.toHaveCSS("animation-name", "none");
-  await expect(part).toHaveCSS("animation-play-state", "running");
-  await expect(artwork).toHaveCSS("animation-play-state", "running");
   await page.getByRole("button", { name: "Pause animations" }).click();
-  await expect(part).toHaveCSS("animation-play-state", "paused");
-  await expect(artwork).toHaveCSS("animation-play-state", "paused");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
-  await expect(page.locator(".floating-part").first()).toHaveCSS(
-    "animation-play-state",
-    "paused",
-  );
 });
 
 test("mobile navigation and layouts work without horizontal overflow", async ({
@@ -191,7 +234,7 @@ test("mobile navigation and layouts work without horizontal overflow", async ({
   await navigation.getByRole("link", { name: "The crawler" }).click();
   await expect(navigation).toBeHidden();
   await expect(page).toHaveURL(/#explanation$/);
-  for (const width of [320, 390, 620, 768, 1024, 1440]) {
+  for (const width of [320, 360, 390, 480, 620, 768, 900, 1024, 1440, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     expect(
       await page.evaluate(
@@ -199,6 +242,17 @@ test("mobile navigation and layouts work without horizontal overflow", async ({
       ),
       `Overflow at ${width}px`,
     ).toBe(true);
+    for (const selector of ["#hero-title", "#text-particles", "#rotor"]) {
+      const rect = (await page.locator(selector).boundingBox())!;
+      expect(
+        rect.x,
+        `${selector} left edge at ${width}px`,
+      ).toBeGreaterThanOrEqual(-0.5);
+      expect(
+        rect.x + rect.width,
+        `${selector} right edge at ${width}px`,
+      ).toBeLessThanOrEqual(width + 0.5);
+    }
   }
 });
 

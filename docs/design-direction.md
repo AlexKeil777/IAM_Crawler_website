@@ -4,17 +4,17 @@ Purpose: explain the IAM Crawler to a business audience, with enough evidence to
 
 Reference: https://n2team.com/ — inspected its HTML and CSS on 2 November 2026. Retain pitch black, warm ink, quiet rules, generous space and evaporation. Create an independent identity rather than reuse its logo, copy or code.
 
-Palette: black #000000, charcoal #101110, ivory #efede7, stone #a4a39c, copper #dca477, subdued rule #292a27. Copper connects the design to automotive materials rather than generic green AI branding.
+Palette: black #000000, charcoal #101110, ivory #efede7, stone #a4a39c, purple #b69af7, subdued rule #292a27. Purple is the user's requested accent, shared across the brand, interactive states and particle details.
 
 Type: self-hosted Manrope, using weight and scale rather than a collection of typefaces. Keep descriptions to comfortable reading widths.
 
-Layout, revised 3 November 2026: exactly three main sections. A centred animated monogram accompanies the requested title and subtitle. One explanation section contains the market-sample goal, a four-row comparison with a fixed-shop crawler, and a compact process. The final section contains the contact form. Remove the old demonstration, export preview, repeated slogans and closing pitch.
+Layout, revised 3 November 2026: exactly three main sections. The hero pairs a prominent AIAM wordmark and four headline lines with the restored particle brake disc. Desktop uses two columns; tablets and phones stack the wordmark, disc and text. One explanation section contains the market-sample goal, a four-row comparison with a fixed-shop crawler, and a compact process. The final section contains the contact form.
 
-Identity: a compact shared-stroke symbol. Two peaks form M, the left peak and crossbar form A, and the central copper stem forms I. The transparent logo and black-backed favicon use identical 160×160 geometry. The hero's canvas samples that actual SVG, with gentle dispersal and cursor repulsion. Motion can be paused and respects the operating system's reduced-motion preference.
+Identity: a readable geometric AIAM wordmark. The I is purple and A/A/M are ivory. The black-backed favicon adapts the same glyphs into AI / AM rows for legibility at tab size. The hero retains the original cursor-reactive brake disc, using purple detail particles. Text assembles from fine particles one line at a time, then crossfades into native HTML. All four lines appear immediately with reduced motion or when animations are paused.
 
-Background: original thin-outline drawings of drilled brake discs, pistons with connecting rods, paired wipers, alloy wheels and coil springs. A fixed, clipped layer places them around the edges, with faint copper strokes, slow drift and rotation. The centre is masked to protect the title and content. Mobile uses six instances rather than twelve. This layer is inert, hidden from accessibility tools, and pauses with the shared motion control or tab visibility; reduced-motion settings retain static drawings.
+Background: plain black. Remove the floating automotive drawings, as requested in the latest steering.
 
-Copy: plain descriptions of the goal and behaviour, rather than slogans. Representativeness is the goal, not a claimed statistical result. The four comparison rows cover flexible reading, offer validation, customer-like browsing and maintenance. No invented accuracy figures, live-price claims or testimonials.
+Copy: the hero uses the user's exact lines: “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and, below them, “Crawl intelligently”. The explanation stays concrete. Representativeness is the goal, not a claimed statistical result. The four comparison rows cover flexible reading, offer validation, customer-like browsing and maintenance. No invented accuracy figures, live-price claims or testimonials.
 
 ## Source grounding
 

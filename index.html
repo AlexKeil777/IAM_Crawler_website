@@ -8,14 +8,14 @@
       name="description"
       content="An AI crawler for a representative sample of the independent aftermarket: relevant shops, comparable BMW part offers, prices and sources."
     />
-    <meta property="og:title" content="The intelligent IAM crawler" />
+    <meta property="og:title" content="AIAM — Intelligent IAM crawling" />
     <meta
       property="og:description"
       content="AI-assisted shop discovery and offer validation for a representative view of the independent aftermarket."
     />
     <meta property="og:type" content="website" />
-    <title>The intelligent IAM crawler</title>
-    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg?v=2" />
+    <title>AIAM — Intelligent IAM crawling</title>
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg?v=3" />
     <link
       rel="preload"
       href="%BASE_URL%fonts/manrope-latin.woff2"
@@ -27,8 +27,8 @@
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
     <header class="site-header wrap">
-      <a class="brand" href="#home" aria-label="IAM AI Crawler home"
-        ><img src="%BASE_URL%logo.svg" width="42" height="42" alt="IAM AI"
+      <a class="brand" href="#home" aria-label="AIAM home"
+        ><img src="%BASE_URL%logo.svg?v=3" width="108" height="36" alt="AIAM"
       /></a>
       <nav class="desktop-nav" aria-label="Main navigation">
         <a href="#explanation">The crawler</a><a href="#contact">Contact</a>
@@ -77,23 +77,51 @@
     <main id="main">
       <section class="hero wrap" id="home" aria-labelledby="hero-title">
         <div class="hero-content">
-          <div
-            class="hero-identity"
-            role="img"
-            aria-label="Animated monogram combining IAM and AI"
-          >
+          <div class="hero-copy">
             <img
-              class="identity-fallback"
-              src="%BASE_URL%logo.svg"
-              width="160"
-              height="160"
-              alt=""
-              aria-hidden="true"
+              class="hero-wordmark"
+              src="%BASE_URL%logo.svg?v=3"
+              width="360"
+              height="120"
+              alt="AIAM"
             />
-            <canvas id="identity-particles" aria-hidden="true"></canvas>
+            <div class="hero-message">
+              <h1 id="hero-title">
+                <span
+                  class="crawl-line"
+                  data-line-order="0"
+                  style="--line-order: 0"
+                  ><span class="line-text">Crawl efficiently</span></span
+                >
+                <span
+                  class="crawl-line"
+                  data-line-order="1"
+                  style="--line-order: 1"
+                  ><span class="line-text">Crawl reliably</span></span
+                >
+                <span
+                  class="crawl-line"
+                  data-line-order="2"
+                  style="--line-order: 2"
+                  ><span class="line-text">Crawl flexibly</span></span
+                >
+                <span
+                  class="crawl-line intelligent-line"
+                  data-line-order="3"
+                  style="--line-order: 3"
+                  ><span class="line-text">Crawl intelligently</span></span
+                >
+              </h1>
+              <canvas id="text-particles" aria-hidden="true"></canvas>
+            </div>
           </div>
-          <h1 id="hero-title">The intelligent IAM crawler</h1>
-          <p class="hero-subtitle">powered by AI</p>
+          <figure
+            class="hero-art"
+            role="img"
+            aria-label="Particle brake disc that scatters around the cursor"
+          >
+            <canvas id="rotor" aria-hidden="true"></canvas>
+          </figure>
         </div>
         <a
           class="scroll-link"
@@ -131,7 +159,7 @@
               <tr>
                 <th scope="col"><span class="sr-only">Aspect</span></th>
                 <th scope="col">Traditional crawler</th>
-                <th scope="col">IAM AI crawler</th>
+                <th scope="col">AIAM crawler</th>
               </tr>
             </thead>
             <tbody>
@@ -202,11 +230,7 @@
           action="https://formsubmit.co/iamaicrawler@gmail.com"
           method="POST"
         >
-          <input
-            type="hidden"
-            name="_subject"
-            value="IAM AI Crawler website enquiry"
-          />
+          <input type="hidden" name="_subject" value="AIAM website enquiry" />
           <input type="hidden" name="_template" value="table" />
           <input type="hidden" name="_captcha" value="false" />
           <input
@@ -285,8 +309,12 @@
       </section>
     </main>
     <footer class="site-footer wrap">
-      <a href="#home" aria-label="IAM AI Crawler home"
-        ><img src="%BASE_URL%logo.svg" width="32" height="32" alt="IAM AI" /></a
+      <a href="#home" aria-label="AIAM home"
+        ><img
+          src="%BASE_URL%logo.svg?v=3"
+          width="84"
+          height="28"
+          alt="AIAM" /></a
       ><a href="#home">Back to top <span aria-hidden="true">↑</span></a>
     </footer>
     <script type="module" src="/src/main.ts"></script>

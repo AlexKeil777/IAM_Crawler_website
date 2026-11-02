@@ -99,7 +99,7 @@ test("particles scatter around the cursor, return, and stop when motion is pause
 }) => {
   await page.goto("./");
   await expect(page.locator("html")).toHaveAttribute("data-motion", "playing");
-  const canvas = page.locator("#identity-particles");
+  const canvas = page.locator("#rotor");
   await expect(canvas).toBeVisible();
   await page.evaluate(async () => {
     await document.fonts.ready;
@@ -114,7 +114,7 @@ test("particles scatter around the cursor, return, and stop when motion is pause
         .map((animation) => animation.finished.catch(() => {})),
     );
   });
-  // Find a populated part of the mark, then observe the rendered pixels.
+  // Find a populated part of the brake disc, then observe the rendered pixels.
   const patch = await canvas.evaluate((element: HTMLCanvasElement) => {
     const ctx = element.getContext("2d")!;
     const ratio = element.width / element.clientWidth;

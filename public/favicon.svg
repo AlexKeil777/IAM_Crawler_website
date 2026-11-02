@@ -1,9 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
-  <title>IAM AI</title>
+  <title>AIAM</title>
   <rect width="160" height="160" rx="24" fill="#000"/>
-  <g stroke-linecap="square" stroke-linejoin="bevel">
-    <path class="monogram-frame" d="M24 124L56 36L80 84L104 36L136 124" stroke="#efede7" stroke-width="12"/>
-    <path class="monogram-a" d="M42 76H76" stroke="#efede7" stroke-width="10"/>
-    <path class="monogram-i" d="M80 84V124" stroke="#dca477" stroke-width="12"/>
+  <g stroke="#efede7" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3">
+    <g transform="translate(44.72 18) scale(.72)">
+      <path class="wordmark-letter letter-a-first" data-letter="A" d="M0 72L36 0L72 72M14 44H58"/>
+      <path class="wordmark-letter letter-i" data-letter="I" d="M98 0V72" stroke="#b69af7"/>
+    </g>
+    <g transform="translate(18.8 90) scale(.72)">
+      <path class="wordmark-letter letter-a-second" data-letter="A" d="M0 72L36 0L72 72M14 44H58"/>
+      <path class="wordmark-letter letter-m" data-letter="M" d="M98 72V0L134 42L170 0V72"/>
+    </g>
   </g>
 </svg>

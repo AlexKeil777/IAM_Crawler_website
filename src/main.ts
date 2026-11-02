@@ -1,15 +1,6 @@
 import "./style.css";
-import { ParticleIdentity } from "./identity";
-import { createAutomotiveBackground } from "./automotive-parts";
-
-document.body.prepend(createAutomotiveBackground());
-const updateVisibility = () => {
-  document.documentElement.dataset.visibility = document.hidden
-    ? "hidden"
-    : "visible";
-};
-document.addEventListener("visibilitychange", updateVisibility);
-updateVisibility();
+import { ParticleRotor } from "./rotor";
+import { ParticleTextReveal } from "./text-reveal";
 
 const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let storedMotion: string | null = null;
@@ -21,8 +12,12 @@ try {
 let paused = motionQuery.matches || storedMotion === "paused";
 const motionButton =
   document.querySelector<HTMLButtonElement>(".motion-toggle")!;
-const identity = new ParticleIdentity(
-  document.querySelector<HTMLCanvasElement>("#identity-particles")!,
+const rotor = new ParticleRotor(
+  document.querySelector<HTMLCanvasElement>("#rotor")!,
+);
+const textReveal = new ParticleTextReveal(
+  document.querySelector<HTMLElement>(".hero-message")!,
+  paused,
 );
 
 function applyMotion() {
@@ -35,7 +30,8 @@ function applyMotion() {
   document.querySelector(".motion-label")!.textContent = paused
     ? "Motion off"
     : "Motion on";
-  identity.setPaused(paused);
+  rotor.setPaused(paused);
+  textReveal.setPaused(paused);
 }
 motionButton.addEventListener("click", () => {
   paused = !paused;

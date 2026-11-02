@@ -1,9 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none" role="img" aria-labelledby="logo-title logo-description">
-  <title id="logo-title">IAM AI</title>
-  <desc id="logo-description">A shared-stroke monogram: two peaks form M, the left peak and crossbar form A, and a copper central stem forms I.</desc>
-  <g stroke-linecap="square" stroke-linejoin="bevel">
-    <path class="monogram-frame" pathLength="1" d="M24 124L56 36L80 84L104 36L136 124" stroke="#efede7" stroke-width="12"/>
-    <path class="monogram-a" pathLength="1" d="M42 76H76" stroke="#efede7" stroke-width="10"/>
-    <path class="monogram-i" pathLength="1" d="M80 84V124" stroke="#dca477" stroke-width="12"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" fill="none" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">AIAM</title>
+  <desc id="logo-description">The letters A, I, A, M in a geometric outline wordmark. The I is purple.</desc>
+  <g stroke="#efede7" stroke-width="10" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3">
+    <path class="wordmark-letter letter-a-first" data-letter="A" pathLength="1" d="M33 96L69 24L105 96M47 68H91"/>
+    <path class="wordmark-letter letter-i" data-letter="I" pathLength="1" d="M131 24V96" stroke="#b69af7"/>
+    <path class="wordmark-letter letter-a-second" data-letter="A" pathLength="1" d="M157 96L193 24L229 96M171 68H215"/>
+    <path class="wordmark-letter letter-m" data-letter="M" pathLength="1" d="M255 96V24L291 66L327 24V96"/>
   </g>
 </svg>
