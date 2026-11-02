@@ -2,7 +2,7 @@
 
 A presentation of the IAM Crawler: what it does, how it follows a customer's search journey, and why AI page reading helps it adapt to a changing independent aftermarket.
 
-Built in this repository with Vite, TypeScript, CSS and a custom Canvas 2D particle animation. The site is static and has no runtime API, tracking, account system or dependency on the crawler being online.
+Built with Vite, TypeScript, CSS and a custom Canvas 2D particle animation. The static site runs independently of the crawler. Its contact form sends submissions through FormSubmit.
 
 ## Run locally
 
@@ -28,17 +28,19 @@ The production build is in `dist/`. Its relative asset URLs work both at the dom
 
 The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same source produces the local and hosted versions. Vite's relative base and base-aware font, icon and download URLs keep every asset inside the project URL.
 
-## Content and interactions
+## Three sections
 
-- Four advantages, explained through native expandable disclosures.
-- Four-stage walkthrough with keyboard-accessible tabs and soft evaporation transitions.
-- Interactive offer validation with comparable/excluded filters and individual explanations.
-- Downloadable CSV example using the crawler's combined output fields.
-- A custom IAM/AI shared-stroke vector mark in `public/logo.svg`.
-- A particle brake rotor that slowly turns, disperses and reforms. Nearby particles scatter away from the cursor, then spring smoothly back to the disc when the cursor moves away.
-- A persistent motion control, reduced-motion support, offscreen rendering suspension, responsive layouts and accessible focus states.
+1. An animated IAM/AI monogram, the title “The intelligent IAM crawler”, and “powered by AI”. The same geometry appears in the favicon. Particles disperse gently and scatter away from the cursor before returning to the mark.
+2. The goal of a representative IAM market sample, a concise comparison with a fixed-shop crawler, and four workflow steps.
+3. A contact form addressed to `iamaicrawler@gmail.com`.
 
-Website copy is grounded in the sibling `IAM_Crawler` repository. See [the design and research notes](docs/design-direction.md). Illustrations and sample prices are explicitly illustrative, not live crawl results. The website neither starts crawls nor accepts part numbers.
+The site retains a persistent motion control, reduced-motion support, offscreen rendering suspension, responsive layouts and accessible focus states. Copy is grounded in the sibling `IAM_Crawler` repository; see [the design and research notes](docs/design-direction.md).
+
+## Contact form setup
+
+The native form posts to `https://formsubmit.co/iamaicrawler@gmail.com`; JavaScript uses FormSubmit's AJAX endpoint to keep visitors on the page. Required fields are name, email and message; company is optional. The form prevents duplicate submissions, uses a honeypot, times out stalled requests, preserves failed messages and allows retries.
+
+FormSubmit requires a one-time recipient confirmation if this email address has not already been activated. The first genuine submission triggers an activation email to `iamaicrawler@gmail.com`; follow its confirmation link. This is a recipient action, not a website deployment step. Automated tests intercept form requests and do not send real emails. See the [FormSubmit setup instructions](https://formsubmit.co/).
 
 ## Verification
 
@@ -48,8 +50,8 @@ npm test
 
 This command builds production files, then runs Playwright against the development server, the built site at `/`, and the built site under `/IAM_Crawler_website/`. The production checks use a plain static server with real 404s, so source transforms and fallback HTML cannot hide missing assets.
 
-Playwright uses locally installed Google Chrome. Tests cover workflow tabs, keyboard navigation, offer decisions and rapid filter changes, reduced motion, mobile navigation, responsive overflow, the CSV download, automated WCAG checks, deployment asset loading, identical layout across environments, and the rendered cursor-scattering behaviour. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
+Playwright uses locally installed Google Chrome. Tests cover the three-section structure, exact hero copy, mocked contact-form validation/success/retry, reduced motion, mobile navigation, responsive overflow, automated WCAG checks, deployment asset loading, identical screenshots across environments, and cursor scattering. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
 
 ## Assets and reference
 
-The visual reference was [N2 Team](https://n2team.com/), interpreted through an independent layout and identity. The rotor and monogram are original code/vector artwork. Manrope is self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. No font or asset services are contacted by the running website.
+The visual reference was [N2 Team](https://n2team.com/), interpreted through an independent layout and identity. The monogram is original vector artwork: M's two peaks share A's left peak and crossbar, with a copper I stem. The particle renderer samples `public/logo.svg`, so it uses the same geometry as the browser-tab icon. Manrope is self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. Assets are served locally; only contact submissions use FormSubmit.

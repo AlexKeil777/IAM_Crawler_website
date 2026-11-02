@@ -1,51 +1,136 @@
-import { test, expect } from "@playwright/test";
+﻿import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-test("workflow supports all stages and keyboard navigation", async ({
-  page,
-}) => {
-  await page.goto("./");
-  await expect(page).toHaveTitle(/IAM Crawler/);
-  for (const name of ["Browse", "Understand", "Verify", "Discover"]) {
-    const tab = page.getByRole("tab", { name: new RegExp(name) });
-    await tab.click();
-    await expect(tab).toHaveAttribute("aria-selected", "true");
-    const panel = page.locator(`#${await tab.getAttribute("aria-controls")}`);
-    await expect(panel).toBeVisible();
-    await expect(page.getByRole("tabpanel")).toHaveCount(1);
-  }
-  await page.getByRole("tab", { name: /Discover/ }).focus();
-  await page.keyboard.press("End");
-  await expect(page.getByRole("tab", { name: /Verify/ })).toBeFocused();
-  await expect(page.locator("#panel-verify")).toBeVisible();
-  await page.keyboard.press("Home");
-  await expect(page.locator("#panel-discover")).toBeVisible();
+const endpoint = "https://formsubmit.co/ajax/iamaicrawler@gmail.com";
+
+// Never send real contact emails during automated browser checks.
+test.beforeEach(async ({ page }) => {
+  await page.route("https://formsubmit.co/**", (route) => route.abort());
 });
 
-test("offer decisions and filters stay coherent during quick changes", async ({
+async function fillContact(page: Page) {
+  await page.locator('#contact-form [name="name"]').fill("Market analyst");
+  await page
+    .locator('#contact-form [name="email"]')
+    .fill("analyst@example.com");
+  await page
+    .locator('#contact-form [name="message"]')
+    .fill("I would like to discuss aftermarket coverage in Germany.");
+}
+
+test("the page has three focused sections and the requested hero copy", async ({
   page,
 }) => {
   await page.goto("./");
-  await page.locator('[data-offer="pair"]').click();
-  await expect(page.locator("#explanation-title")).toHaveText(
-    "Two discs are a different quantity.",
+  await expect(page.locator("main > section")).toHaveCount(3);
+  await expect(page.locator("#home h1")).toHaveText(
+    "The intelligent IAM crawler",
   );
-  await page.getByRole("button", { name: "Comparable 1", exact: true }).click();
-  await expect(page.locator(".offer-row:visible")).toHaveCount(1);
-  await expect(page.locator("#explanation-title")).toHaveText(
-    "The same product, in the same quantity.",
+  await expect(
+    page.locator("#home").getByText("powered by AI", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#explanation")).toContainText(/representative/i);
+  await expect(page.locator("#explanation")).toContainText(/BMW/);
+  await expect(page.locator("#contact-form")).toHaveAttribute(
+    "action",
+    "https://formsubmit.co/iamaicrawler@gmail.com",
   );
-  await page.getByRole("button", { name: "Excluded 3", exact: true }).click();
-  await expect(page.locator(".offer-row:visible")).toHaveCount(3);
-  await page.locator('[data-offer="used"]').click();
-  await expect(page.locator("#explanation-title")).toHaveText(
-    "The condition changes the comparison.",
+  await expect(page.locator("#contact-form")).toHaveAttribute(
+    "method",
+    /post/i,
   );
-  await page.locator('[data-filter="all"]').click();
-  await page.locator('[data-filter="kept"]').click();
-  await page.locator('[data-filter="excluded"]').click();
-  await expect(page.locator(".offer-row:visible")).toHaveCount(3);
-  await expect(page.locator(".offer-row.selected:visible")).toHaveCount(1);
+  await expect(page.locator("body")).not.toContainText("Form changes.");
+});
+
+test("contact form validates required fields before sending", async ({
+  page,
+}) => {
+  let submissions = 0;
+  page.on("request", (request) => {
+    if (
+      request.url().startsWith("https://formsubmit.co/") &&
+      request.method() === "POST"
+    )
+      submissions++;
+  });
+  await page.goto("./");
+  const submit = page.locator('#contact-form button[type="submit"]');
+  await submit.click();
+  expect(
+    await page
+      .locator("#contact-form")
+      .evaluate((form: HTMLFormElement) => form.checkValidity()),
+  ).toBe(false);
+  await fillContact(page);
+  await page.locator('#contact-form [name="email"]').fill("invalid-email");
+  await submit.click();
+  expect(
+    await page
+      .locator('#contact-form [name="email"]')
+      .evaluate((input: HTMLInputElement) => input.validity.valid),
+  ).toBe(false);
+  expect(submissions).toBe(0);
+});
+
+test("contact form sends to the intended endpoint and confirms success", async ({
+  page,
+}) => {
+  let payload = "";
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(endpoint, async (route) => {
+    expect(route.request().method()).toBe("POST");
+    payload = route.request().postData() || "";
+    await pending;
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: "true" }),
+    });
+  });
+  await page.goto("./");
+  await fillContact(page);
+  const submit = page.locator('#contact-form button[type="submit"]');
+  await submit.click();
+  await expect(submit).toBeDisabled();
+  release();
+  await expect(page.locator("#contact-status")).toHaveText("Message sent.");
+  expect(payload).toContain("Market analyst");
+  expect(payload).toContain("analyst@example.com");
+  await expect(page.locator('#contact-form [name="name"]')).toHaveValue("");
+  await expect(page.locator('#contact-form [name="email"]')).toHaveValue("");
+  await expect(page.locator('#contact-form [name="message"]')).toHaveValue("");
+  await expect(submit).toBeEnabled();
+});
+
+test("a failed contact submission preserves the message and allows retry", async ({
+  page,
+}) => {
+  let attempts = 0;
+  await page.route(endpoint, (route) => {
+    attempts++;
+    return route.fulfill({
+      status: attempts === 1 ? 500 : 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: attempts === 1 ? "false" : "true" }),
+    });
+  });
+  await page.goto("./");
+  await fillContact(page);
+  const submit = page.locator('#contact-form button[type="submit"]');
+  await submit.click();
+  await expect(page.locator("#contact-status")).toHaveText(
+    "Message could not be sent. Please try again or email us directly.",
+  );
+  await expect(page.locator('#contact-form [name="message"]')).toHaveValue(
+    "I would like to discuss aftermarket coverage in Germany.",
+  );
+  await expect(submit).toBeEnabled();
+  await submit.click();
+  await expect(page.locator("#contact-status")).toHaveText("Message sent.");
+  expect(attempts).toBe(2);
 });
 
 test("motion respects reduced preference and the pause control persists", async ({
@@ -57,44 +142,31 @@ test("motion respects reduced preference and the pause control persists", async 
   await expect(
     page.getByRole("button", { name: "Play animations" }),
   ).toBeVisible();
-  await expect(page.locator(".advantage[open] .advantage-body")).toHaveCSS(
-    "opacity",
-    "1",
-  );
-  await page.getByText("The shops can change.", { exact: false }).click();
-  await expect(page.locator(".advantage[open] .advantage-body")).toHaveCSS(
-    "opacity",
-    "1",
-  );
+  await expect(page.locator("h1")).toHaveCSS("opacity", "1");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.getByRole("button", { name: "Pause animations" }).click();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
 });
 
-test("mobile navigation, disclosure and layouts work without page overflow", async ({
+test("mobile navigation and layouts work without horizontal overflow", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("./");
+  const navigation = page.getByRole("navigation", {
+    name: "Mobile navigation",
+  });
   await page.getByRole("button", { name: "Open navigation" }).click();
-  await expect(
-    page.getByRole("navigation", { name: "Mobile navigation" }),
-  ).toBeVisible();
+  await expect(navigation).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(
     page.getByRole("button", { name: "Open navigation" }),
   ).toBeFocused();
   await page.getByRole("button", { name: "Open navigation" }).click();
-  await page
-    .getByRole("navigation", { name: "Mobile navigation" })
-    .getByRole("link", { name: "How it works" })
-    .click();
-  await expect(
-    page.getByRole("navigation", { name: "Mobile navigation" }),
-  ).toBeHidden();
-  await page.getByText("The shops can change.", { exact: false }).click();
-  await expect(page.locator(".advantage[open]")).toHaveCount(1);
+  await navigation.getByRole("link", { name: "The crawler" }).click();
+  await expect(navigation).toBeHidden();
+  await expect(page).toHaveURL(/#explanation$/);
   for (const width of [320, 390, 620, 768, 1024, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     expect(
@@ -106,66 +178,28 @@ test("mobile navigation, disclosure and layouts work without page overflow", asy
   }
 });
 
-test("example download has the real output schema and explicit illustrative data", async ({
+test("page has no accessibility violations or runtime errors", async ({
   page,
-  request,
-}) => {
-  await page.goto("./");
-  const downloadEvent = page.waitForEvent("download");
-  await page.getByRole("link", { name: "Download an example CSV" }).click();
-  const download = await downloadEvent;
-  expect(download.suggestedFilename()).toBe("illustrative-offers.csv");
-  const href = await page
-    .getByRole("link", { name: "Download an example CSV" })
-    .getAttribute("href");
-  const response = await request.get(new URL(href!, page.url()).href);
-  expect(response.ok()).toBe(true);
-  const text = await response.text();
-  const lines = text.trim().split(/\r?\n/);
-  expect(lines).toHaveLength(5);
-  for (const field of [
-    "brand_pn",
-    "price_wo_vat",
-    "url",
-    "kept",
-    "left_out_reason",
-    "left_out_detail",
-  ])
-    expect(lines[0].split(",")).toContain(field);
-  expect(text).toContain("ILLUSTRATIVE");
-  const columns = lines[0].split(",").length;
-  for (const row of lines.slice(1))
-    expect(row.split(",")).toHaveLength(columns);
-});
-
-test("page has no serious accessibility violations or runtime errors", async ({
-  page,
-}) => {
+}, testInfo) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
-  await page.evaluate(async () => {
-    await document.fonts.ready;
-    await Promise.all(
-      document
-        .getAnimations()
-        .filter(
-          (animation) => animation.effect?.getTiming().iterations !== Infinity,
-        )
-        .map((animation) => animation.finished.catch(() => {})),
-    );
-  });
-  const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(results.violations).toEqual([]);
+  await page.evaluate(() => document.fonts.ready);
+  for (const [name, width, height] of [
+    ["desktop", 1440, 1000],
+    ["mobile", 390, 844],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    const results = await new AxeBuilder({ page })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .analyze();
+    expect(results.violations).toEqual([]);
+    await page.screenshot({
+      path: `test-results/${testInfo.project.name}-${name}.png`,
+      fullPage: true,
+      animations: "disabled",
+    });
+  }
   expect(errors).toEqual([]);
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.screenshot({ path: "test-results/desktop.png", fullPage: true });
-  await page.setViewportSize({ width: 390, height: 844 });
-  const mobileResults = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
-    .analyze();
-  expect(mobileResults.violations).toEqual([]);
-  await page.screenshot({ path: "test-results/mobile.png", fullPage: true });
 });

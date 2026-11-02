@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="12" fill="#000"/><path d="M12 48V16M23 48L35 16L48 48M29 36H42M48 48V16L56 25" fill="none" stroke="#efede7" stroke-width="4" stroke-linejoin="round"/><path d="M12 16V30" stroke="#dca477" stroke-width="4"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
+  <title>IAM AI</title>
+  <rect width="160" height="160" rx="24" fill="#000"/>
+  <g stroke-linecap="square" stroke-linejoin="bevel">
+    <path class="monogram-frame" d="M24 124L56 36L80 84L104 36L136 124" stroke="#efede7" stroke-width="12"/>
+    <path class="monogram-a" d="M42 76H76" stroke="#efede7" stroke-width="10"/>
+    <path class="monogram-i" d="M80 84V124" stroke="#dca477" stroke-width="12"/>
+  </g>
+</svg>

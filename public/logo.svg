@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 92 44" fill="none"><title>IAM and AI shared monogram</title><path d="M5 36V8M19 36L32 8L45 36M25 24H39M45 36V8L64 29L83 8V36" stroke="#efede7" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="square"/><path d="M5 8V20" stroke="#dca477" stroke-width="4.5"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none" role="img" aria-labelledby="logo-title logo-description">
+  <title id="logo-title">IAM AI</title>
+  <desc id="logo-description">A shared-stroke monogram: two peaks form M, the left peak and crossbar form A, and a copper central stem forms I.</desc>
+  <g stroke-linecap="square" stroke-linejoin="bevel">
+    <path class="monogram-frame" pathLength="1" d="M24 124L56 36L80 84L104 36L136 124" stroke="#efede7" stroke-width="12"/>
+    <path class="monogram-a" pathLength="1" d="M42 76H76" stroke="#efede7" stroke-width="10"/>
+    <path class="monogram-i" pathLength="1" d="M80 84V124" stroke="#dca477" stroke-width="12"/>
+  </g>
+</svg>

@@ -8,11 +8,11 @@ Palette: black #000000, charcoal #101110, ivory #efede7, stone #a4a39c, copper #
 
 Type: self-hosted Manrope, using weight and scale rather than a collection of typefaces. Keep descriptions to comfortable reading widths.
 
-Layout: an asymmetric opening pairs a clear proposition with a particle brake rotor. A narrow sticky introduction accompanies the four advantages; a full-width interactive sequence explains the method. An offer comparison shows why validation matters. A compact export preview closes the story.
+Layout, revised 3 November 2026: exactly three main sections. A centred animated monogram accompanies the requested title and subtitle. One explanation section contains the market-sample goal, a four-row comparison with a fixed-shop crawler, and a compact process. The final section contains the contact form. Remove the old demonstration, export preview, repeated slogans and closing pitch.
 
-Memorable element: a brake rotor made from individual particles, slowly turning and dispersing into the air. Other movement stays quiet. Motion can be paused and respects the operating system's reduced-motion preference.
+Identity: a compact shared-stroke symbol. Two peaks form M, the left peak and crossbar form A, and the central copper stem forms I. The transparent logo and black-backed favicon use identical 160×160 geometry. The hero's canvas samples that actual SVG, with gentle dispersal and cursor repulsion. Motion can be paused and respects the operating system's reduced-motion preference.
 
-Review: a generic AI landing page would use a glowing orb, fabricated metrics and repeated feature cards. Here the main object is a recognisable automotive component, content comes from the crawler, and the interactive example demonstrates its actual comparison rules. No fabricated performance claims or live prices.
+Copy: plain descriptions of the goal and behaviour, rather than slogans. Representativeness is the goal, not a claimed statistical result. The four comparison rows cover flexible reading, offer validation, customer-like browsing and maintenance. No invented accuracy figures, live-price claims or testimonials.
 
 ## Source grounding
 
@@ -26,4 +26,4 @@ Reviewed ../IAM_Crawler/README.md, config.py and search_crawler.py, including Co
 - CSVs keep source URLs, timestamps, prices and VAT context. Combined output includes rejected offers and reasons, normalised names, translations and sourced AI brand-quality ratings.
 - Blocks, geographic access and model uncertainty can limit coverage. Do not claim an exhaustive or error-free market census.
 
-Examples on the website are explicitly illustrative. They do not reproduce live shop prices or private input lists.
+The contact form uses FormSubmit for iamaicrawler@gmail.com, with accessible validation, honest success/failure states and a native POST fallback. Automated browser checks mock all form submissions. Recipient activation, if not already completed, requires confirming FormSubmit's email after the first genuine submission.

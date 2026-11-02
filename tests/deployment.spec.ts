@@ -59,7 +59,7 @@ test("development and deployed files render the same layout at both URL depths",
       await page.evaluate(() =>
         [
           ...document.querySelectorAll(
-            "h1, h2, .hero-description, .hero-art, .site-header, .process-tabs, .comparison-demo, .output-preview",
+            "h1, h2, #home, #explanation, #contact, .site-header, #contact-form",
           ),
         ].map((element) => {
           const style = getComputedStyle(element);
@@ -99,17 +99,29 @@ test("particles scatter around the cursor, return, and stop when motion is pause
 }) => {
   await page.goto("./");
   await expect(page.locator("html")).toHaveAttribute("data-motion", "playing");
-  const canvas = page.locator("#rotor");
+  const canvas = page.locator("#identity-particles");
   await expect(canvas).toBeVisible();
-  await page.evaluate(() => document.fonts.ready);
-  // Find an actually populated patch of the ring, then observe the rendered pixels.
+  await page.evaluate(async () => {
+    await document.fonts.ready;
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter(
+          (animation) =>
+            animation.playState !== "paused" &&
+            animation.effect?.getTiming().iterations !== Infinity,
+        )
+        .map((animation) => animation.finished.catch(() => {})),
+    );
+  });
+  // Find a populated part of the mark, then observe the rendered pixels.
   const patch = await canvas.evaluate((element: HTMLCanvasElement) => {
     const ctx = element.getContext("2d")!;
     const ratio = element.width / element.clientWidth;
     const image = ctx.getImageData(0, 0, element.width, element.height);
     let best = { x: 0, y: 0, density: 0 };
-    for (const fx of [0.25, 0.35, 0.65, 0.75])
-      for (const fy of [0.3, 0.4, 0.6, 0.7]) {
+    for (const fx of [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
+      for (const fy of [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]) {
         const x = element.clientWidth * fx,
           y = element.clientHeight * fy;
         let density = 0;
@@ -147,7 +159,7 @@ test("particles scatter around the cursor, return, and stop when motion is pause
     .toBeLessThan(patch.density * 0.45);
   const scatteredDensity = await density();
   await page.mouse.move(0, 0);
-  // The disc keeps turning, so its original patch need not regain the exact pixel count.
+  // Ambient motion can change the patch slightly; recovery still has to be clear.
   await expect
     .poll(density, { timeout: 7000 })
     .toBeGreaterThan(Math.max(patch.density * 0.5, scatteredDensity * 2));
