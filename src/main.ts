@@ -1,5 +1,15 @@
 import "./style.css";
 import { ParticleIdentity } from "./identity";
+import { createAutomotiveBackground } from "./automotive-parts";
+
+document.body.prepend(createAutomotiveBackground());
+const updateVisibility = () => {
+  document.documentElement.dataset.visibility = document.hidden
+    ? "hidden"
+    : "visible";
+};
+document.addEventListener("visibilitychange", updateVisibility);
+updateVisibility();
 
 const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let storedMotion: string | null = null;

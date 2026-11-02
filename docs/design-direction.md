@@ -12,6 +12,8 @@ Layout, revised 3 November 2026: exactly three main sections. A centred animated
 
 Identity: a compact shared-stroke symbol. Two peaks form M, the left peak and crossbar form A, and the central copper stem forms I. The transparent logo and black-backed favicon use identical 160×160 geometry. The hero's canvas samples that actual SVG, with gentle dispersal and cursor repulsion. Motion can be paused and respects the operating system's reduced-motion preference.
 
+Background: original thin-outline drawings of drilled brake discs, pistons with connecting rods, paired wipers, alloy wheels and coil springs. A fixed, clipped layer places them around the edges, with faint copper strokes, slow drift and rotation. The centre is masked to protect the title and content. Mobile uses six instances rather than twelve. This layer is inert, hidden from accessibility tools, and pauses with the shared motion control or tab visibility; reduced-motion settings retain static drawings.
+
 Copy: plain descriptions of the goal and behaviour, rather than slogans. Representativeness is the goal, not a claimed statistical result. The four comparison rows cover flexible reading, offer validation, customer-like browsing and maintenance. No invented accuracy figures, live-price claims or testimonials.
 
 ## Source grounding

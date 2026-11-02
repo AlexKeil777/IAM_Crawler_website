@@ -138,15 +138,39 @@ test("motion respects reduced preference and the pause control persists", async 
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
+  const background = page.locator(".automotive-background");
+  const part = background.locator(".floating-part").first();
+  const artwork = part.locator("svg.part-art");
+  await expect(background).toHaveAttribute("aria-hidden", "true");
+  await expect(background).toHaveAttribute("inert", "");
+  await expect(background).toHaveCSS("pointer-events", "none");
+  await expect(artwork).toHaveCSS("pointer-events", "none");
+  for (const type of ["brake-disc", "piston", "wipers", "wheel"]) {
+    expect(
+      await background.locator(`.floating-part[data-part="${type}"]`).count(),
+    ).toBeGreaterThan(0);
+  }
+  await expect(part).toHaveCSS("animation-name", "none");
+  await expect(artwork).toHaveCSS("animation-name", "none");
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
   await expect(
     page.getByRole("button", { name: "Play animations" }),
   ).toBeVisible();
   await expect(page.locator("h1")).toHaveCSS("opacity", "1");
   await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(part).not.toHaveCSS("animation-name", "none");
+  await expect(artwork).not.toHaveCSS("animation-name", "none");
+  await expect(part).toHaveCSS("animation-play-state", "running");
+  await expect(artwork).toHaveCSS("animation-play-state", "running");
   await page.getByRole("button", { name: "Pause animations" }).click();
+  await expect(part).toHaveCSS("animation-play-state", "paused");
+  await expect(artwork).toHaveCSS("animation-play-state", "paused");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
+  await expect(page.locator(".floating-part").first()).toHaveCSS(
+    "animation-play-state",
+    "paused",
+  );
 });
 
 test("mobile navigation and layouts work without horizontal overflow", async ({

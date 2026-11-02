@@ -34,6 +34,8 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 2. The goal of a representative IAM market sample, a concise comparison with a fixed-shop crawler, and four workflow steps.
 3. A contact form addressed to `iamaicrawler@gmail.com`.
 
+Thin-outline brake discs, pistons, wipers, alloy wheels and coil springs drift behind the content. Discs and wheels rotate slowly; smaller screens show fewer parts. The decorative layer ignores pointer input and screen readers, follows the motion control, and stops animating when the tab is hidden or reduced motion is preferred.
+
 The site retains a persistent motion control, reduced-motion support, offscreen rendering suspension, responsive layouts and accessible focus states. Copy is grounded in the sibling `IAM_Crawler` repository; see [the design and research notes](docs/design-direction.md).
 
 ## Contact form setup
