@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Meet the IAM Crawler. AI-powered aftermarket intelligence that discovers relevant shops, understands BMW part offers, and validates what really compares."
+    />
+    <meta
+      property="og:title"
+      content="IAM Crawler — A moving market. A clearer picture."
+    />
+    <meta
+      property="og:description"
+      content="Aftermarket intelligence for BMW parts, built around the way customers actually shop."
+    />
+    <meta property="og:type" content="website" />
+    <title>IAM Crawler — A moving market. A clearer picture.</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link
+      rel="preload"
+      href="/fonts/manrope-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <div class="ambient-field" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+    <header class="site-header wrap">
+      <a class="brand" href="#" aria-label="IAM Crawler home">
+        <svg
+          class="brand-mark"
+          viewBox="0 0 92 44"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M5 36V8M19 36L32 8L45 36M25 24H39M45 36V8L64 29L83 8V36"
+            stroke="currentColor"
+            stroke-width="4.5"
+            stroke-linejoin="round"
+            stroke-linecap="square"
+          />
+          <path d="M5 8V20" stroke="#dca477" stroke-width="4.5" />
+        </svg>
+        <span class="brand-name">IAM<span>Crawler</span></span>
+      </a>
+      <nav class="desktop-nav" aria-label="Main navigation">
+        <a href="#approach">The approach</a><a href="#method">How it works</a
+        ><a href="#validation">Offer validation</a>
+      </nav>
+      <div class="header-actions">
+        <button
+          class="motion-toggle"
+          type="button"
+          aria-label="Pause animations"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <path
+              class="pause-symbol"
+              d="M5 3V13M11 3V13"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+            />
+            <path
+              class="play-symbol"
+              d="M5 3L12 8L5 13Z"
+              fill="currentColor"
+            /></svg
+          ><span class="motion-label">Motion on</span></button
+        ><a class="header-link" href="#outputs"
+          >The output <span aria-hidden="true">↗</span></a
+        ><button
+          class="menu-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+          aria-label="Open navigation"
+        >
+          <span></span><span></span>
+        </button>
+      </div>
+      <nav
+        class="mobile-nav"
+        id="mobile-nav"
+        aria-label="Mobile navigation"
+        hidden
+      >
+        <a href="#approach">The approach</a><a href="#method">How it works</a
+        ><a href="#validation">Offer validation</a
+        ><a href="#outputs">The output</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="intro-line">
+            <span class="small-cross" aria-hidden="true">+</span> Independent
+            aftermarket intelligence
+          </p>
+          <h1 id="hero-title">A moving market.<br />A clearer picture.</h1>
+          <p class="hero-description">
+            Your customers don’t shop from a fixed list.<br
+              class="desktop-break"
+            />
+            Your market intelligence shouldn’t either.
+          </p>
+          <p class="hero-detail">
+            The IAM Crawler uses AI to find relevant shops, understand their
+            offers, and identify comparable alternatives to BMW parts.
+          </p>
+          <a class="primary-link" href="#approach"
+            ><span class="arrow-disc" aria-hidden="true">↓</span> Discover the
+            approach</a
+          >
+        </div>
+        <figure class="hero-art">
+          <div class="rotor-frame">
+            <canvas id="rotor" aria-hidden="true"></canvas>
+            <div class="art-cross cross-one" aria-hidden="true">+</div>
+            <div class="art-cross cross-two" aria-hidden="true">+</div>
+            <span class="art-note"
+              >Form changes.<br />Understanding stays.</span
+            >
+          </div>
+          <figcaption>
+            <span class="caption-line" aria-hidden="true"></span> Scattered
+            information. Structured intelligence.
+          </figcaption>
+        </figure>
+        <div class="hero-foot">
+          <span>Built around BMW part numbers</span
+          ><a href="#method"
+            >Follow the journey <span aria-hidden="true">↓</span></a
+          ><span class="hero-foot-right"
+            >IAM <span class="copper">×</span> AI</span
+          >
+        </div>
+      </section>
+
+      <section class="statement wrap" aria-labelledby="statement-title">
+        <p class="section-kicker">The idea is simple</p>
+        <h2 id="statement-title">
+          Read the market.<br /><span class="muted"
+            >Understand what’s on the page.</span
+          >
+        </h2>
+        <div class="statement-body">
+          <p>
+            A conventional crawler depends on knowing where to look and how each
+            shop is built. Change the page, and the extraction rules may need to
+            change with it.
+          </p>
+          <p>
+            The IAM Crawler reads offers in context. AI handles differences in
+            layout, language, and product descriptions, so the approach can
+            follow relevant shops as the market evolves.
+          </p>
+        </div>
+      </section>
+
+      <section
+        class="approach wrap section-space"
+        id="approach"
+        aria-labelledby="approach-title"
+      >
+        <div class="section-intro">
+          <p class="section-kicker">Why this approach</p>
+          <h2 id="approach-title">
+            Built for a market<br />that won’t stand still.
+          </h2>
+          <p>
+            Four advantages. One principle:<br />understanding beats rigid
+            rules.
+          </p>
+          <div class="small-monogram" aria-hidden="true">
+            <svg viewBox="0 0 92 44" fill="none">
+              <path
+                d="M5 36V8M19 36L32 8L45 36M25 24H39M45 36V8L64 29L83 8V36"
+                stroke="currentColor"
+                stroke-width="2"
+              /></svg
+            ><span>Aftermarket meets intelligence.</span>
+          </div>
+        </div>
+        <div class="advantages">
+          <details class="advantage" open>
+            <summary>
+              <span class="advantage-title"
+                >Different formats.<br />The same understanding.</span
+              ><span class="expand-icon" aria-hidden="true"></span>
+            </summary>
+            <div class="advantage-body">
+              <p>
+                Product grids, long descriptions, marketplace listings. Luna
+                interprets the page’s content rather than relying on a different
+                extraction template for every shop.
+              </p>
+              <p class="detail-note">Versatility, built into the reading.</p>
+            </div>
+          </details>
+          <details class="advantage">
+            <summary>
+              <span class="advantage-title"
+                >A matching number<br />is only the beginning.</span
+              ><span class="expand-icon" aria-hidden="true"></span>
+            </summary>
+            <div class="advantage-body">
+              <p>
+                A pair isn’t a single disc. A repair kit isn’t one of its
+                components. The crawler checks fit, variant, quantity and
+                condition, then uses further reads and cross-shop evidence when
+                a judgement needs support.
+              </p>
+              <p class="detail-note">
+                Questionable offers are excluded, with a reason.
+              </p>
+            </div>
+          </details>
+          <details class="advantage">
+            <summary>
+              <span class="advantage-title"
+                >A customer’s journey.<br />A considered stopping point.</span
+              ><span class="expand-icon" aria-hidden="true"></span>
+            </summary>
+            <div class="advantage-body">
+              <p>
+                Discover relevant shops, search for a part, read the offers. The
+                crawler follows the same broad journey as a shopper and stops at
+                defined coverage targets, rather than chasing endless results.
+              </p>
+              <p class="detail-note">
+                A focused view of the offers a buyer encounters.
+              </p>
+            </div>
+          </details>
+          <details class="advantage">
+            <summary>
+              <span class="advantage-title"
+                >The shops can change.<br />The approach still works.</span
+              ><span class="expand-icon" aria-hidden="true"></span>
+            </summary>
+            <div class="advantage-body">
+              <p>
+                Shop discovery is refreshed periodically. New entrants can be
+                considered, unavailable shops can be left behind, and page
+                changes don’t require a new shop-specific parser.
+              </p>
+              <p class="detail-note">
+                Less maintenance. Less dependence on a frozen shop list.
+              </p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section
+        class="method section-space"
+        id="method"
+        aria-labelledby="method-title"
+      >
+        <div class="wrap">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">From part number to market picture</p>
+              <h2 id="method-title">
+                A familiar journey.<br />An intelligent reader.
+              </h2>
+            </div>
+            <p>
+              Explore the four steps behind<br class="desktop-break" />
+              every comparable offer.
+            </p>
+          </div>
+          <div
+            class="process-tabs"
+            role="tablist"
+            aria-label="Crawler workflow"
+          >
+            <button
+              type="button"
+              role="tab"
+              id="tab-discover"
+              aria-controls="panel-discover"
+              aria-selected="true"
+              tabindex="0"
+            >
+              <span>01</span> Discover</button
+            ><button
+              type="button"
+              role="tab"
+              id="tab-browse"
+              aria-controls="panel-browse"
+              aria-selected="false"
+              tabindex="-1"
+            >
+              <span>02</span> Browse</button
+            ><button
+              type="button"
+              role="tab"
+              id="tab-understand"
+              aria-controls="panel-understand"
+              aria-selected="false"
+              tabindex="-1"
+            >
+              <span>03</span> Understand</button
+            ><button
+              type="button"
+              role="tab"
+              id="tab-verify"
+              aria-controls="panel-verify"
+              aria-selected="false"
+              tabindex="-1"
+            >
+              <span>04</span> Verify
+            </button>
+          </div>
+          <div class="process-stage">
+            <div
+              class="process-panel"
+              role="tabpanel"
+              id="panel-discover"
+              aria-labelledby="tab-discover"
+              tabindex="0"
+            >
+              <div class="process-copy">
+                <span class="step-label">Start with the market</span>
+                <h3>Find where buyers<br />actually look.</h3>
+                <p>
+                  Searches for sample parts reveal the market’s relevant shops.
+                  AI ranks candidates, works out how to search each one, and
+                  trials them before the run.
+                </p>
+                <p class="process-aside">
+                  Discovery refreshes after seven days by default, or on
+                  request.
+                </p>
+              </div>
+              <div class="schematic discovery-schematic" aria-hidden="true">
+                <div class="search-bar">
+                  <svg viewBox="0 0 20 20" width="18" height="18">
+                    <circle cx="8" cy="8" r="5.5" />
+                    <path d="M12 12L17 17" /></svg
+                  ><span>BMW · part number · market</span><span>↵</span>
+                </div>
+                <div class="discovery-connector"></div>
+                <div class="shop-result">
+                  <span class="shop-icon">A</span>
+                  <div>
+                    <strong>Relevant local shop</strong
+                    ><span>Part lookup tested</span>
+                  </div>
+                  <span class="check-mark">✓</span>
+                </div>
+                <div class="shop-result">
+                  <span class="shop-icon">B</span>
+                  <div>
+                    <strong>Aftermarket specialist</strong
+                    ><span>Offers checked in a trial</span>
+                  </div>
+                  <span class="check-mark">✓</span>
+                </div>
+                <div class="shop-result faint-result">
+                  <span class="shop-icon">C</span>
+                  <div>
+                    <strong>Another candidate</strong
+                    ><span>Relevance and access assessed</span>
+                  </div>
+                  <span>· · ·</span>
+                </div>
+                <span class="diagram-caption"
+                  >An evolving shop selection, grounded in the market.</span
+                >
+              </div>
+            </div>
+            <div
+              class="process-panel"
+              role="tabpanel"
+              id="panel-browse"
+              aria-labelledby="tab-browse"
+              tabindex="0"
+              hidden
+            >
+              <div class="process-copy">
+                <span class="step-label">Follow the buyer’s path</span>
+                <h3>Search with intent.<br />Stop with enough.</h3>
+                <p>
+                  A real browser searches shops by part number and saves the
+                  rendered pages. Further shops and result pages are visited
+                  when coverage needs them.
+                </p>
+                <p class="process-aside">
+                  Default target: 40 offers across at least five shops, when
+                  available. Up to five result pages per shop.
+                </p>
+              </div>
+              <div class="schematic browse-schematic" aria-hidden="true">
+                <div class="browser-top">
+                  <i></i><i></i><i></i
+                  ><span>shop / search / BMW part number</span>
+                </div>
+                <div class="browser-title">Results for your part</div>
+                <div class="browser-products">
+                  <div>
+                    <span class="part-disc"></span><span>Single disc</span
+                    ><strong>€ —.—</strong>
+                  </div>
+                  <div>
+                    <span class="part-disc"></span><span>Another brand</span
+                    ><strong>€ —.—</strong>
+                  </div>
+                  <div>
+                    <span class="part-disc"></span><span>Another offer</span
+                    ><strong>€ —.—</strong>
+                  </div>
+                </div>
+                <div class="coverage-line">
+                  <span>Coverage target</span><span>Enough offers → stop</span>
+                </div>
+                <div class="coverage-bar"><span></span></div>
+                <span class="diagram-caption"
+                  >Purposeful browsing, with a defined limit.</span
+                >
+              </div>
+            </div>
+            <div
+              class="process-panel"
+              role="tabpanel"
+              id="panel-understand"
+              aria-labelledby="tab-understand"
+              tabindex="0"
+              hidden
+            >
+              <div class="process-copy">
+                <span class="step-label">Read the content in context</span>
+                <h3>Let the page change.<br />Keep the meaning.</h3>
+                <p>
+                  Luna reads the saved page text and identifies brands,
+                  products, prices, currency and VAT context. It compares what
+                  the offer contains with what BMW’s part description requires.
+                </p>
+                <p class="process-aside">
+                  The reading runs through GitHub Copilot CLI. No shop-specific
+                  extraction template.
+                </p>
+              </div>
+              <div class="schematic understand-schematic" aria-hidden="true">
+                <div class="source-fragments">
+                  <span>Product description</span
+                  ><span>Brand & article no.</span><span>Price & currency</span>
+                </div>
+                <div class="reading-bridge">
+                  <span></span>
+                  <div class="model-node">
+                    Luna<small>Read in context</small>
+                  </div>
+                  <span></span>
+                </div>
+                <div class="extracted-fields">
+                  <div>
+                    <span>Product</span><strong>Single brake disc</strong>
+                  </div>
+                  <div>
+                    <span>Variant</span><strong>330 × 20 mm · rear</strong>
+                  </div>
+                  <div><span>Condition</span><strong>New</strong></div>
+                </div>
+                <span class="diagram-caption"
+                  >Different page structures. Consistent offer fields.</span
+                >
+              </div>
+            </div>
+            <div
+              class="process-panel"
+              role="tabpanel"
+              id="panel-verify"
+              aria-labelledby="tab-verify"
+              tabindex="0"
+              hidden
+            >
+              <div class="process-copy">
+                <span class="step-label">Build a defensible comparison</span>
+                <h3>Keep the match.<br />Keep the evidence.</h3>
+                <p>
+                  Fit, quantity, condition and currency are checked. Cross-shop
+                  evidence and additional reads help settle uncertain offers; a
+                  final check reviews descriptions and implausible prices.
+                </p>
+                <p class="process-aside">
+                  Unresolved offers are excluded. Kept and excluded records
+                  remain traceable.
+                </p>
+              </div>
+              <div class="schematic verify-schematic" aria-hidden="true">
+                <div class="verify-line">
+                  <span class="check-mark">✓</span
+                  ><span>Same part, variant and quantity</span>
+                </div>
+                <div class="verify-line">
+                  <span class="check-mark">✓</span
+                  ><span>Condition and market checked</span>
+                </div>
+                <div class="verify-line">
+                  <span class="check-mark">✓</span
+                  ><span>Evidence supports the judgement</span>
+                </div>
+                <div class="verdict-line">
+                  <span class="verdict-dot"></span> Comparable offer retained
+                  <span>↗</span>
+                </div>
+                <div class="excluded-note">
+                  <span>×</span> Exclusions saved with their reasons
+                </div>
+                <span class="diagram-caption"
+                  >A considered dataset, with a trail back to the page.</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="method-foot">
+            <span>Illustration of the workflow</span
+            ><span>AI interprets. The crawler orchestrates.</span>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="validation wrap section-space"
+        id="validation"
+        aria-labelledby="validation-title"
+      >
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Where the judgement matters</p>
+            <h2 id="validation-title">
+              An offer isn’t always<br />an alternative.
+            </h2>
+          </div>
+          <p>
+            A part number can lead to a single component,<br
+              class="desktop-break"
+            />
+            a pair, a used item, or a different variant.<br
+              class="desktop-break"
+            />
+            Only the right comparison belongs in the result.
+          </p>
+        </div>
+        <div class="comparison-demo">
+          <div class="reference-part">
+            <div>
+              <span class="reference-label">The BMW part to compare</span>
+              <h3>One rear brake disc.</h3>
+              <p>Ventilated · 330 × 20 mm · single item</p>
+            </div>
+            <div class="reference-icon" aria-hidden="true">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="demo-toolbar">
+            <p>Illustrative offers <span>Not live shop data</span></p>
+            <div
+              class="offer-filters"
+              role="group"
+              aria-label="Filter illustrative offers"
+            >
+              <button type="button" data-filter="all" aria-pressed="true">
+                All offers <span>4</span></button
+              ><button type="button" data-filter="kept" aria-pressed="false">
+                Comparable <span>1</span></button
+              ><button
+                type="button"
+                data-filter="excluded"
+                aria-pressed="false"
+              >
+                Excluded <span>3</span>
+              </button>
+            </div>
+          </div>
+          <div class="offer-list" aria-label="Illustrative offer judgements">
+            <button
+              type="button"
+              class="offer-row selected"
+              data-offer="single"
+              data-verdict="kept"
+              aria-pressed="true"
+              aria-controls="offer-explanation"
+            >
+              <span class="offer-letter">A</span
+              ><span class="offer-product"
+                ><strong>Single brake disc</strong
+                ><span>330 × 20 mm · new · rear</span></span
+              ><span class="offer-price">€74.90</span
+              ><span class="offer-verdict kept"
+                ><span aria-hidden="true">✓</span> Kept</span
+              ><span class="offer-chevron" aria-hidden="true">↗</span>
+            </button>
+            <button
+              type="button"
+              class="offer-row"
+              data-offer="pair"
+              data-verdict="excluded"
+              aria-pressed="false"
+              aria-controls="offer-explanation"
+            >
+              <span class="offer-letter">B</span
+              ><span class="offer-product"
+                ><strong>Pair of brake discs</strong
+                ><span>330 × 20 mm · new · two items</span></span
+              ><span class="offer-price">€129.80</span
+              ><span class="offer-verdict excluded"
+                ><span aria-hidden="true">×</span> Excluded</span
+              ><span class="offer-chevron" aria-hidden="true">↗</span>
+            </button>
+            <button
+              type="button"
+              class="offer-row"
+              data-offer="used"
+              data-verdict="excluded"
+              aria-pressed="false"
+              aria-controls="offer-explanation"
+            >
+              <span class="offer-letter">C</span
+              ><span class="offer-product"
+                ><strong>Used brake disc</strong
+                ><span>330 × 20 mm · pre-owned · rear</span></span
+              ><span class="offer-price">€24.00</span
+              ><span class="offer-verdict excluded"
+                ><span aria-hidden="true">×</span> Excluded</span
+              ><span class="offer-chevron" aria-hidden="true">↗</span>
+            </button>
+            <button
+              type="button"
+              class="offer-row"
+              data-offer="variant"
+              data-verdict="excluded"
+              aria-pressed="false"
+              aria-controls="offer-explanation"
+            >
+              <span class="offer-letter">D</span
+              ><span class="offer-product"
+                ><strong>Different disc variant</strong
+                ><span>300 × 22 mm · new · rear</span></span
+              ><span class="offer-price">€69.90</span
+              ><span class="offer-verdict excluded"
+                ><span aria-hidden="true">×</span> Excluded</span
+              ><span class="offer-chevron" aria-hidden="true">↗</span>
+            </button>
+          </div>
+          <div
+            class="offer-explanation"
+            id="offer-explanation"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            <span class="explanation-label">The judgement</span>
+            <div>
+              <strong id="explanation-title"
+                >The same product, in the same quantity.</strong
+              >
+              <p id="explanation-text">
+                One new rear disc with the required dimensions. The offer can be
+                compared with the single BMW disc.
+              </p>
+            </div>
+          </div>
+          <p class="demo-note">
+            Select an offer to see the reasoning. In actual runs, unresolved
+            judgements are excluded and the reason is recorded.
+          </p>
+        </div>
+      </section>
+
+      <section
+        class="outputs section-space"
+        id="outputs"
+        aria-labelledby="outputs-title"
+      >
+        <div class="wrap output-layout">
+          <div class="output-copy">
+            <p class="section-kicker">The result</p>
+            <h2 id="outputs-title">
+              A market picture.<br />With a paper trail.
+            </h2>
+            <p>
+              Structured offers you can analyse. Source pages you can return to.
+              Exclusions you can understand.
+            </p>
+            <ul class="output-features">
+              <li>Per-part and combined CSV exports</li>
+              <li>Prices, currency, VAT context and timestamps</li>
+              <li>Source URLs and recorded exclusion reasons</li>
+              <li>
+                Normalised brands, English names and sourced AI quality ratings
+              </li>
+            </ul>
+            <a
+              class="text-link"
+              href="/examples/illustrative-offers.csv"
+              download
+              >Download an example CSV <span aria-hidden="true">↗</span></a
+            >
+            <p class="download-note">Illustrative format · 4 records · CSV</p>
+          </div>
+          <div class="output-preview">
+            <div class="file-header">
+              <span class="file-icon" aria-hidden="true">▤</span
+              ><span>combined_observations.csv</span
+              ><span class="file-type">Preview</span>
+            </div>
+            <div
+              class="table-scroll"
+              tabindex="0"
+              role="region"
+              aria-label="Illustrative CSV preview, scroll horizontally"
+            >
+              <table>
+                <caption class="sr-only">
+                  Illustrative combined output, using the same example offers
+                  shown above.
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Kept</th>
+                    <th scope="col">Reason</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Single brake disc</td>
+                    <td>74.90</td>
+                    <td class="table-yes">yes</td>
+                    <td>—</td>
+                  </tr>
+                  <tr>
+                    <td>Pair of brake discs</td>
+                    <td>129.80</td>
+                    <td>no</td>
+                    <td>other product</td>
+                  </tr>
+                  <tr>
+                    <td>Used brake disc</td>
+                    <td>24.00</td>
+                    <td>no</td>
+                    <td>used</td>
+                  </tr>
+                  <tr>
+                    <td>Different disc variant</td>
+                    <td>69.90</td>
+                    <td>no</td>
+                    <td>other product</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="file-footer">
+              <span>Every decision stays visible.</span><span>4 records</span>
+            </div>
+            <p class="preview-note">
+              Simplified illustrative preview. The export contains the full
+              field structure.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="closing wrap">
+        <p class="section-kicker">Designed to stay relevant</p>
+        <h2>The market sets the direction.<br />Intelligence follows.</h2>
+        <p>
+          Versatile reading. Considered comparisons.<br />A view shaped by the
+          market your customers encounter.
+        </p>
+        <a class="primary-link" href="#method"
+          ><span class="arrow-disc" aria-hidden="true">↗</span> Revisit the
+          method</a
+        >
+        <details class="coverage-details">
+          <summary>
+            A note on coverage <span aria-hidden="true">+</span>
+          </summary>
+          <p>
+            The crawler produces a focused market sample, not an exhaustive
+            census. Shop access, geography and AI uncertainty can limit
+            coverage. Discovery refreshes periodically; the default 40-offer and
+            five-shop targets depend on availability. Brand quality ratings are
+            AI assessments with recorded reasons and sources.
+          </p>
+        </details>
+      </section>
+    </main>
+    <footer class="site-footer wrap">
+      <a class="footer-brand" href="#" aria-label="IAM Crawler home"
+        >IAM <span>×</span> AI<span class="footer-tagline"
+          >A clearer view of the aftermarket.</span
+        ></a
+      ><span>Independent aftermarket intelligence</span
+      ><a href="#">Back to the top <span aria-hidden="true">↑</span></a>
+    </footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
