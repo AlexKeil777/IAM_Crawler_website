@@ -73,14 +73,42 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   const surface = logo.locator(".logo-mirror-clip");
   const plane = logo.locator(".logo-mirror-plane");
   const housing = logo.locator(".logo-mirror-housing");
+  const reflection = mirror.locator(".logo-reflection");
+  const warning = mirror.locator(".logo-mirror-sheen .logo-mirror-warning");
   await expect(logo).toHaveAttribute("data-phase", "dropping");
   const initialDrop = await mirror.getAttribute("transform");
   const initialProjection = await source.getAttribute("transform");
   await expect(logo.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
-  await expect(mirror.locator(".logo-reflection")).toHaveAttribute("clip-path", "url(#mirror-surface)");
+  await expect(reflection).toHaveAttribute("clip-path", "url(#mirror-surface)");
   await expect(logo.locator(".logo-reflection image")).toHaveAttribute("transform", "translate(360 0) scale(-1 1)");
-  await page.clock.runFor(1200);
+  await expect(reflection).toHaveAttribute("opacity", "0");
+  expect(await plane.evaluate((element) => (element as SVGGElement).transform.baseVal.consolidate()!.matrix.a)).toBe(0);
+
+  // Keep actual painted strokes visible while the stalk and mount pass them.
+  const probes = await source.evaluate((element) => {
+    const camera = (element as SVGGElement).getScreenCTM()!;
+    return [
+      { name: "I", x: 25, y: 42, width: 6, height: 34 },
+      { name: "A", x: 61, y: 85, width: 3, height: 5 },
+      { name: "left half of M", x: 147, y: 48, width: 6, height: 36 },
+    ].map(({ name, x, y, width, height }) => {
+      const from = new DOMPoint(x, y).matrixTransform(camera);
+      const to = new DOMPoint(x + width, y + height).matrixTransform(camera);
+      return { name, clip: { x: from.x, y: from.y, width: to.x - from.x, height: to.y - from.y } };
+    });
+  });
+  const originalLetters = await Promise.all(probes.map(({ clip }) => page.screenshot({ clip })));
+  let elapsed = 0;
+  for (const time of [900, 1200, 1500]) {
+    await page.clock.runFor(time - elapsed);
+    elapsed = time;
+    for (const [index, probe] of probes.entries()) {
+      expect((await page.screenshot({ clip: probe.clip })).equals(originalLetters[index]), `${probe.name} stays unobstructed at ${time} ms`).toBe(true);
+    }
+  }
   await expect(logo).toHaveAttribute("data-phase", "dropping");
+  await expect(reflection).toHaveAttribute("opacity", "0");
+  expect(await plane.evaluate((element) => (element as SVGGElement).transform.baseVal.consolidate()!.matrix.a)).toBe(0);
   expect(await mirror.getAttribute("transform")).not.toBe(initialDrop);
   const shell = (await housing.boundingBox())!;
   const descendingGlass = (await plane.boundingBox())!;
@@ -95,9 +123,14 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
     }))).toBe(true);
   }
 
-  await page.clock.runFor(1800);
-  await expect(logo).toHaveAttribute("data-phase", "turning");
+  await page.clock.runFor(400);
   const landedPosition = await mirror.getAttribute("transform");
+  expect(landedPosition).toBe("translate(0 0)");
+  await page.clock.runFor(200);
+  await expect(logo).toHaveAttribute("data-phase", "turning");
+  // The glass starts exposing the reflection in the first 100 ms of its turn.
+  expect(await reflection.evaluate((element) => Number(element.getAttribute("opacity")))).toBeGreaterThan(0);
+  expect(await plane.evaluate((element) => (element as SVGGElement).transform.baseVal.consolidate()!.matrix.a)).toBeGreaterThan(0);
   const turningProjection = await source.getAttribute("transform");
   await page.clock.runFor(600);
   expect(await mirror.getAttribute("transform")).toBe(landedPosition);
@@ -106,7 +139,7 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   expect(await surface.getAttribute("transform")).toBe(await plane.getAttribute("transform"));
   expect(await housing.locator("path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d")))).not.toEqual(initialHousing);
 
-  await page.clock.runFor(1100);
+  await page.clock.runFor(1000);
   await expect(logo).toHaveAttribute("data-phase", "complete");
   await expect(mirror).toHaveCSS("opacity", "1");
   expect(await mirror.getAttribute("transform")).toBe(landedPosition);
@@ -114,6 +147,14 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   const glass = (await plane.boundingBox())!;
   expect(glass.width).toBeGreaterThan(60);
   expect(glass.height).toBeGreaterThan(70);
+  await expect(warning).toHaveText("Objects in mirrors are closer than they appear");
+  expect(await mirror.locator(".logo-mirror-sheen").getAttribute("transform")).toBe(await plane.getAttribute("transform"));
+  const warningBounds = await warning.evaluate((element) => {
+    const bounds = (element as SVGGraphicsElement).getBBox();
+    return { top: bounds.y, bottom: bounds.y + bounds.height };
+  });
+  expect(warningBounds.top).toBeGreaterThan(96);
+  expect(warningBounds.bottom).toBeLessThan(140);
   expect(await mirror.locator("path").evaluateAll((paths) => paths.every((path) => {
     const data = path.getAttribute("d") || "";
     return data.length > 0 && !/NaN|Infinity/.test(data)

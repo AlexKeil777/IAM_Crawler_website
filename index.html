@@ -65,9 +65,6 @@
                   <linearGradient id="mirror-sheen" x1="0" y1="0" x2="360" y2="140" gradientUnits="userSpaceOnUse"><stop stop-color="#e6f0f7" stop-opacity=".13"/><stop offset=".45" stop-color="#e6f0f7" stop-opacity="0"/><stop offset="1" stop-color="#e6f0f7" stop-opacity=".03"/></linearGradient>
                 </defs>
                 <g class="logo-stage">
-                  <g class="logo-source" transform="matrix(.88295 .03275 0 .99756 21.069 -5.895)">
-                    <g clip-path="url(#logo-left)"><image href="%BASE_URL%logo.svg?v=4" width="360" height="120" /></g>
-                  </g>
                   <g class="logo-mirror" transform="translate(0 0)" opacity="1">
                     <g class="logo-mirror-housing"></g>
                     <g class="logo-mirror-plane" transform="matrix(.46947 -.06162 0 .99756 180 0)">
@@ -83,8 +80,13 @@
                     <g class="logo-mirror-sheen" transform="matrix(.46947 -.06162 0 .99756 180 0)">
                       <path d="M2 8C30-12 79-18 140-18C239-18 313-12 350 2C372 11 380 26 378 49L368 111C365 129 347 139 322 142L48 145C20 143 8 132 4 113Z" fill="url(#mirror-sheen)" />
                       <path d="M23 0C98-22 275-15 341 6M44 138C123 141 264 139 321 135" stroke="#d4e3ee" stroke-width=".9" opacity=".4" />
+                      <text class="logo-mirror-warning" x="190" y="131" text-anchor="middle" textLength="300" lengthAdjust="spacingAndGlyphs" font-family="Arial, sans-serif" font-size="8.8" fill="#c8d2da">Objects in mirrors are closer than they appear</text>
                     </g>
                     <path class="logo-mirror-edge" d="M-10 8C10-21 58-32 126-32C235-34 316-25 363-5C391 7 399 31 393 60L381 115C376 140 353 154 320 156L52 157C17 154-2 139-7 116L-13 34C-15 22-14 14-10 8Z" stroke="#8993a3" stroke-width="1.2" transform="matrix(.46947 -.06162 0 .99756 180 0)" />
+                  </g>
+                  <!-- Keep the original letters in front of the descending mount. -->
+                  <g class="logo-source" transform="matrix(.88295 .03275 0 .99756 21.069 -5.895)">
+                    <g clip-path="url(#logo-left)"><image href="%BASE_URL%logo.svg?v=4" width="360" height="120" /></g>
                   </g>
                 </g>
               </svg>

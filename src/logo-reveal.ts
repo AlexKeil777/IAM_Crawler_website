@@ -1,6 +1,9 @@
 import { SideMirror } from "./side-mirror";
 
 const dropDistance = 280;
+const dropDuration = 1.8;
+const turnStart = dropDuration + .2;
+const turnDuration = 1.6;
 
 const smooth = (value: number) => {
   const n = Math.max(0, Math.min(1, value));
@@ -43,10 +46,10 @@ export class LogoReveal {
   }
 
   private render(turn: number, drop: number) {
-    // The cap starts turned away, exposing its rounded back and mounting arm.
-    // It swivels through edge-on to the shared final camera of the lettering.
+    // Glass faces exactly left during descent, edge-on to the viewer. Any
+    // positive turn opens the glass immediately toward the lettering's camera.
     const yaw = turn * 28 * Math.PI / 180;
-    const mirrorYaw = (-18 + turn * 46) * Math.PI / 180;
+    const mirrorYaw = yaw;
     const pitch = turn * 4 * Math.PI / 180;
     const c = Math.cos(yaw), s = Math.sin(yaw);
     const cp = Math.cos(pitch), sp = Math.sin(pitch);
@@ -61,8 +64,9 @@ export class LogoReveal {
     this.glass.setAttribute("transform", surface);
     this.mirror.setAttribute("transform", `translate(0 ${drop})`);
     this.assembly.render(mirrorYaw, pitch);
-    // A silvered mirror has no reflection on the opaque painted back.
-    const visibility = Math.min(1, Math.max(0, Math.sin(mirrorYaw) * 12));
+    // Projection alone reveals the reflection as soon as the glass turns.
+    // Hide the exactly edge-on surface, including its strokes, on descent.
+    const visibility = turn > 0 ? 1 : 0;
     for (const face of [this.plane, this.reflection, this.sheen, this.edge]) {
       face.setAttribute("opacity", String(visibility));
     }
@@ -72,11 +76,11 @@ export class LogoReveal {
   private draw(time: number) {
     if (this.finished) return;
     const elapsed = (time - this.started) / 1000;
-    const drop = smooth(elapsed / 2.6);
-    const turn = smooth((elapsed - 2.8) / 1.6);
+    const drop = smooth(elapsed / dropDuration);
+    const turn = smooth((elapsed - turnStart) / turnDuration);
     this.render(turn, -dropDistance * (1 - drop));
-    this.element.dataset.phase = elapsed < 2.8 ? "dropping" : "turning";
-    if (elapsed >= 4.4) this.finish();
+    this.element.dataset.phase = elapsed < turnStart ? "dropping" : "turning";
+    if (elapsed >= turnStart + turnDuration) this.finish();
     else this.frame = requestAnimationFrame((next) => this.draw(next));
   }
 }

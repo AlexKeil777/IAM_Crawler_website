@@ -36,7 +36,7 @@ await opening.evaluate(() => document.fonts.ready);
 const rect = await opening.locator("#logo-reveal").boundingBox();
 const frames = [];
 let elapsed = 0;
-for (const time of [0, 1300, 2700, 3600, 4500]) {
+for (const time of [0, 1200, 1900, 2700, 3700]) {
   if (time > elapsed) await opening.clock.runFor(time - elapsed);
   elapsed = time;
   const buffer = await opening.screenshot({ clip: { x: rect.x - 10, y: Math.max(0, rect.y - 110), width: rect.width + 20, height: rect.height + 130 } });
