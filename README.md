@@ -31,18 +31,22 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 ## Three sections
 
 1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between eleven automotive parts every two seconds. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
-2. The goal of a representative IAM market sample, a concise comparison with a fixed-shop crawler, and four workflow steps.
-3. A contact form addressed to `iamaicrawler@gmail.com`.
+2. A large illustrative customer quote, the market context, and the question “How much more expensive are we?”. The “Check out our method” button dissolves into fine particles, which condense into an interactive four-step diagram. Select any step to explore its role, or return to the question.
+3. A contact form addressed to `info@iamaicrawler.com`.
 
 The hero uses two columns on desktop and stacks the logo, sculpture and text on smaller screens. The floating background figures have been removed. Purple accents are shared by the wordmark, particles, links, focus indicators and contact button.
+
+The main wordmark opens with I, A and the left half of M. A car mirror drops above its centre and reveals the reflected right half, completing IAMAI after about one second. The mirror then fades, leaving the complete wordmark. Paused or reduced motion shows the final logo immediately.
+
+The header language selector offers DE, EN, IT and RU. All page copy, method details, metadata, accessible labels, form validation and submission messages follow the chosen language, which persists locally. English is the first-visit default. The English customer quote and market paragraphs are supplied marketing copy; the quote is visibly marked as illustrative.
 
 The site retains a persistent motion control, reduced-motion support, offscreen rendering suspension, responsive layouts and accessible focus states. Copy is grounded in the sibling `IAM_Crawler` repository; see [the design and research notes](docs/design-direction.md).
 
 ## Contact form setup
 
-The native form posts to `https://formsubmit.co/iamaicrawler@gmail.com`; JavaScript uses FormSubmit's AJAX endpoint to keep visitors on the page. Required fields are name, email and message; company is optional. The form prevents duplicate submissions, uses a honeypot, times out stalled requests, preserves failed messages and allows retries.
+The native form posts to `https://formsubmit.co/info@iamaicrawler.com`; JavaScript derives the matching `/ajax/` endpoint to keep visitors on the page. Required fields are name, email and message; company is optional. The form prevents duplicate submissions, uses a honeypot, times out stalled requests, preserves failed messages and allows retries. The enquiry subject and user-facing validation and status messages are translated.
 
-FormSubmit requires a one-time recipient confirmation if this email address has not already been activated. The first genuine submission triggers an activation email to `iamaicrawler@gmail.com`; follow its confirmation link. This is a recipient action, not a website deployment step. Automated tests intercept form requests and do not send real emails. See the [FormSubmit setup instructions](https://formsubmit.co/).
+FormSubmit requires activating the form again after changing the recipient. The first genuine submission triggers an activation email to `info@iamaicrawler.com`; follow its confirmation link. This is a recipient action, not a website deployment step. Automated tests intercept form requests and do not send real emails. See the [FormSubmit recipient-change instructions](https://formsubmit.co/help).
 
 ## Verification
 
@@ -54,6 +58,8 @@ This command builds production files, then runs Playwright against the developme
 
 Playwright uses locally installed Google Chrome. Tests cover the three-section structure, exact hero copy and sequential reveal, mocked contact-form validation/success/retry, reduced motion, mobile navigation, viewport widths from 320px to 1920px, automated WCAG checks, deployment asset loading, identical screenshots across environments, and particle cursor scattering. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
 
+The experience tests also cover all four languages, language persistence, translated validation and form requests, the one-second logo reflection, interactive diagram keyboard controls, the finite particle transition and interruption by the motion control, and translated desktop/mobile layouts.
+
 For visual review, start the local development server, then run:
 
 ```sh
@@ -62,8 +68,10 @@ node scripts/review-artwork.mjs
 
 This captures desktop and mobile page layouts plus contact sheets of all eleven sculptures at a fixed camera pose. The images are saved in `test-results/`, alongside per-part render timings printed to the terminal.
 
+For the story, method and mirror reveal, run `node scripts/review-experience.mjs` against the development server. It captures the new layouts, translated method views and a four-frame logo sequence in `test-results/`.
+
 ## Assets and reference
 
 The visual reference was [N2 Team](https://n2team.com/), interpreted through an independent layout and identity. The IAMAI wordmark uses original vector glyphs with mirrored ivory I/A pairs around a purple central M (`#b69af7`). The favicon uses the purple M framed by mirrored ivory I rails for legibility at small sizes.
 
-The original brake disc is preserved. The ten other sculptures use sampled 3D surfaces with realistic proportions, actual depth and mechanical cutouts: control arm, brake pads, steering wheel, radiator, V8 engine block, piston, brake caliper, headlight, muffler and bumper. The headlight has recessed projector optics, the muffler has a formed metal can and hollow exhaust pipes, and the bumper has a curved fascia with open intakes. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope is self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. Assets are served locally; only contact submissions use FormSubmit.
+The original brake disc is preserved. The ten other sculptures use sampled 3D surfaces with realistic proportions, actual depth and mechanical cutouts: control arm, brake pads, steering wheel, radiator, V8 engine block, piston, brake caliper, headlight, muffler and bumper. The headlight has recessed projector optics, the muffler has a formed metal can and hollow exhaust pipes, and the bumper has a curved fascia with open intakes. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope's Latin and Cyrillic subsets are self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. The Cyrillic subset is the unmodified [Google Fonts Manrope v23 webfont](https://fonts.gstatic.com/s/manrope/v23/xn7gYHE41ni1AdIRggOxSuXd.woff2). Assets are served locally; only contact submissions use FormSubmit.

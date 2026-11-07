@@ -1,7 +1,7 @@
 ﻿import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const endpoint = "https://formsubmit.co/ajax/iamaicrawler@gmail.com";
+const endpoint = "https://formsubmit.co/ajax/info@iamaicrawler.com";
 
 // Never send real contact emails during automated browser checks.
 test.beforeEach(async ({ page }) => {
@@ -38,11 +38,27 @@ test("the page has three focused sections and the requested hero copy", async ({
     "The intelligent IAM crawler",
   );
   await expect(page.locator("#home")).not.toContainText("powered by AI");
-  await expect(page.locator("#explanation")).toContainText(/representative/i);
-  await expect(page.locator("#explanation")).toContainText(/BMW/);
+  await expect(page.locator("#language-selector")).toHaveValue("en");
+  await expect(page.locator("#language-selector option")).toHaveText([
+    "DE", "EN", "IT", "RU",
+  ]);
+  await expect(page.locator("#story-view blockquote")).toContainText(
+    "Wow, the original part is far too expensive. I think I'll buy an aftermarket part instead",
+  );
+  await expect(page.locator("#explanation-title")).toHaveText(
+    "How much more expensive are we?",
+  );
+  await expect(page.locator("#method-open")).toHaveText("Check out our method");
+  await expect(page.locator("#method-view")).toBeHidden();
+  await expect(page.locator("#explanation")).toHaveAttribute("data-view", "story");
+  await expect(page.locator("#explanation table")).toHaveCount(0);
+  await expect(page.locator(".email-link")).toHaveText("info@iamaicrawler.com");
+  await expect(page.locator(".email-link")).toHaveAttribute(
+    "href", "mailto:info@iamaicrawler.com",
+  );
   await expect(page.locator("#contact-form")).toHaveAttribute(
     "action",
-    "https://formsubmit.co/iamaicrawler@gmail.com",
+    "https://formsubmit.co/info@iamaicrawler.com",
   );
   await expect(page.locator("#contact-form")).toHaveAttribute(
     "method",

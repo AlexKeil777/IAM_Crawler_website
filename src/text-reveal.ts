@@ -68,6 +68,11 @@ export class ParticleTextReveal {
     else this.schedule();
   }
 
+  /** Re-sample translated text without replaying a completed introduction. */
+  refresh() {
+    if (this.ready) this.rebuild();
+  }
+
   private finish() {
     this.finished = true;
     cancelAnimationFrame(this.frame);
