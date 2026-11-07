@@ -36,7 +36,7 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 
 The hero uses two columns on desktop and stacks the logo, sculpture and text on smaller screens. The floating background figures have been removed. Purple accents are shared by the wordmark, particles, links, focus indicators and contact button.
 
-The main wordmark opens with I, A and the left half of M. A larger car mirror descends over 2.6 seconds, with its glass facing the lettering. After a short pause, the mirror and lettering turn together over 1.6 seconds, revealing the reflected half inside the glass. The mirror stays in place after the reveal. Paused or reduced motion shows this final arrangement immediately.
+The main wordmark opens with I, A and the left half of M. A complete three-dimensional car side mirror descends over 2.6 seconds, showing a curved graphite housing, recessed glass, a stalk and a triangular door mount. After a short pause, the mirror rotates over 1.6 seconds as the lettering turns, revealing the reflected half inside the glass. The housing and mounting components are projected from solid 3D geometry, so their depth and shading change throughout the turn. The mirror stays in place after the reveal. Paused or reduced motion shows this final arrangement immediately.
 
 The header language selector offers DE, EN, IT and RU. All page copy, method details, metadata, accessible labels, form validation and submission messages follow the chosen language, which persists locally. English is the first-visit default. The English customer quote and market paragraphs are supplied marketing copy; the quote is visibly marked as illustrative.
 
@@ -58,7 +58,7 @@ This command builds production files, then runs Playwright against the developme
 
 Playwright uses locally installed Google Chrome. Tests cover the three-section structure, exact hero copy and sequential reveal, mocked contact-form validation/success/retry, reduced motion, mobile navigation, viewport widths from 320px to 1920px, automated WCAG checks, deployment asset loading, identical screenshots across environments, and particle cursor scattering. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
 
-The experience tests also cover all four languages, language persistence, translated validation and form requests, the one-second logo reflection, interactive diagram keyboard controls, the finite particle transition and interruption by the motion control, and translated desktop/mobile layouts.
+The experience tests also cover all four languages, language persistence, translated validation and form requests, the descending and rotating side mirror, its retained reflection and solid housing, interactive diagram keyboard controls, the finite particle transition and interruption by the motion control, and translated desktop/mobile layouts.
 
 For visual review, start the local development server, then run:
 
@@ -68,7 +68,7 @@ node scripts/review-artwork.mjs
 
 This captures desktop and mobile page layouts plus contact sheets of all eleven sculptures at a fixed camera pose. The images are saved in `test-results/`, alongside per-part render timings printed to the terminal.
 
-For the story, method and mirror reveal, run `node scripts/review-experience.mjs` against the development server. It captures the new layouts, translated method views and a four-frame logo sequence in `test-results/`.
+For the story, method and mirror reveal, run `node scripts/review-experience.mjs` against the development server. It captures the new layouts, translated method views and a five-frame logo sequence covering descent, landing, rotation and the final pose in `test-results/`.
 
 ## Assets and reference
 

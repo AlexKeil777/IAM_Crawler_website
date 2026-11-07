@@ -36,14 +36,14 @@ await opening.evaluate(() => document.fonts.ready);
 const rect = await opening.locator("#logo-reveal").boundingBox();
 const frames = [];
 let elapsed = 0;
-for (const time of [0, 650, 1000, 1650]) {
+for (const time of [0, 1300, 2700, 3600, 4500]) {
   if (time > elapsed) await opening.clock.runFor(time - elapsed);
   elapsed = time;
   const buffer = await opening.screenshot({ clip: { x: rect.x - 10, y: Math.max(0, rect.y - 110), width: rect.width + 20, height: rect.height + 130 } });
   frames.push({ time, image: buffer.toString("base64") });
 }
 await opening.setContent(`<html><body style="margin:0;background:#000;color:#efede7;display:flex;font:14px Arial">${frames.map((frame) => `<figure style="margin:0;padding:16px"><img src="data:image/png;base64,${frame.image}" style="display:block"><figcaption style="padding-top:12px">${frame.time} ms</figcaption></figure>`).join("")}</body></html>`);
-await opening.setViewportSize({ width: Math.ceil((rect.width + 52) * 4), height: Math.ceil(rect.height + 205) });
+await opening.setViewportSize({ width: Math.ceil((rect.width + 52) * frames.length), height: Math.ceil(rect.height + 205) });
 await opening.screenshot({ path: "test-results/experience-logo-sequence.png" });
 await opening.close();
 
