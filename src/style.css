@@ -254,6 +254,19 @@ p { color: var(--muted); }
 .submit-button:disabled { opacity: 0.65; }
 .submit-button > [aria-hidden] { font-size: 15px; }
 #contact-status { font-size: 12px; line-height: 1.8; }
+.form-field:has(#contact-message), .form-actions { position: relative; }
+.contact-evaporation {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  border-style: solid;
+  border-color: transparent;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: center bottom;
+}
+[data-motion="paused"] .contact-evaporation { display: none; }
 .success { color: var(--accent); }
 .error { color: #f0b2cf; }
 .form-service { font-size: 10px; color: var(--muted); margin-top: -10px; }
@@ -341,5 +354,6 @@ p { color: var(--muted); }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .contact-evaporation { display: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

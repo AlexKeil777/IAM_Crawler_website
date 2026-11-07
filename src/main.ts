@@ -91,8 +91,10 @@ const submitLabel = submit.querySelector<HTMLElement>(".submit-label")!;
 const status = document.querySelector<HTMLElement>("#contact-status")!;
 const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[required], textarea[required]")];
 let sending = false;
-let statusKey: "sentStatus" | "errorStatus" | null = null;
+let statusKey: "sentStatus" | "errorStatus" | "validationRequired" | "validationEmail" | "sendingLabel" | null = null;
 let statusTimeout: number | undefined;
+// Validate current values in the submit handler, including browser autofill.
+form.noValidate = true;
 
 function localizeValidity(field: HTMLInputElement | HTMLTextAreaElement) {
   field.setCustomValidity("");
@@ -100,22 +102,65 @@ function localizeValidity(field: HTMLInputElement | HTMLTextAreaElement) {
   else if (field.validity.typeMismatch) field.setCustomValidity(t("validationEmail"));
 }
 fields.forEach((field) => {
-  field.addEventListener("invalid", () => localizeValidity(field));
+  field.addEventListener("invalid", () => {
+    localizeValidity(field);
+    window.clearTimeout(statusTimeout);
+    statusKey = field.validity.typeMismatch ? "validationEmail" : "validationRequired";
+    status.className = "error";
+    renderFormState();
+  });
   field.addEventListener("input", () => localizeValidity(field));
 });
 function renderFormState() {
   submitLabel.textContent = t(sending ? "sendingLabel" : "submitLabel");
   status.textContent = statusKey ? t(statusKey) : "";
 }
+function evaporateText(element: HTMLElement) {
+  if (paused || motionQuery.matches) return;
+  const isMessage = element instanceof HTMLTextAreaElement;
+  const value = isMessage ? element.value : element.textContent;
+  if (!value) return;
+  const style = getComputedStyle(element);
+  const vapor = document.createElement("div");
+  vapor.className = "contact-evaporation";
+  vapor.setAttribute("aria-hidden", "true");
+  Object.assign(vapor.style, {
+    left: `${element.offsetLeft}px`, top: `${element.offsetTop}px`,
+    width: `${element.offsetWidth}px`, height: `${element.offsetHeight}px`,
+    font: style.font, lineHeight: style.lineHeight, letterSpacing: style.letterSpacing,
+    color: style.color, padding: style.padding, borderWidth: style.borderWidth,
+    whiteSpace: isMessage ? "pre-wrap" : style.whiteSpace,
+    overflowWrap: style.overflowWrap, wordBreak: style.wordBreak,
+  });
+  const text = document.createElement("span");
+  text.textContent = value;
+  text.style.display = "block";
+  text.style.transform = `translate(${-element.scrollLeft}px, ${-element.scrollTop}px)`;
+  vapor.append(text);
+  element.parentElement!.append(vapor);
+  const animation = vapor.animate([
+    { opacity: 1, filter: "blur(0px)", transform: "translateY(0) scale(1)" },
+    { opacity: 0.65, filter: "blur(2px)", offset: 0.35 },
+    { opacity: 0, filter: "blur(7px)", transform: "translateY(-22px) scale(1.025)" },
+  ], { duration: 650, easing: "ease-out", fill: "forwards" });
+  void animation.finished.then(() => vapor.remove());
+}
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (sending || !form.reportValidity()) return;
+  if (sending) return;
+  fields.forEach(localizeValidity);
+  if (!form.reportValidity()) return;
   const data = new FormData(form);
-  if (data.get("_honey")) return;
+  if (data.get("_honey")) {
+    statusKey = "errorStatus";
+    status.className = "error";
+    renderFormState();
+    return;
+  }
   window.clearTimeout(statusTimeout);
   sending = true;
   submit.disabled = true;
-  statusKey = null;
+  statusKey = "sendingLabel";
   status.className = "";
   renderFormState();
   const controller = new AbortController();
@@ -130,11 +175,13 @@ form.addEventListener("submit", async (event) => {
     });
     const result = await response.json();
     if (!response.ok || ![true, "true"].includes(result.success)) throw new Error("Submission failed");
+    evaporateText(form.querySelector<HTMLTextAreaElement>("#contact-message")!);
     form.reset();
     fields.forEach((field) => field.setCustomValidity(""));
     statusKey = "sentStatus";
     status.className = "success";
     statusTimeout = window.setTimeout(() => {
+      evaporateText(status);
       statusKey = null;
       renderFormState();
     }, 1000);

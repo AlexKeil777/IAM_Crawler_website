@@ -138,6 +138,7 @@ test("contact form validates required fields before sending", async ({
   await page.goto("./");
   const submit = page.locator('#contact-form button[type="submit"]');
   await submit.click();
+  await expect(page.locator("#contact-status")).toHaveText("Please complete this field.");
   expect(
     await page
       .locator("#contact-form")
@@ -146,6 +147,7 @@ test("contact form validates required fields before sending", async ({
   await fillContact(page);
   await page.locator('#contact-form [name="email"]').fill("invalid-email");
   await submit.click();
+  await expect(page.locator("#contact-status")).toHaveText("Please enter a valid email address.");
   expect(
     await page
       .locator('#contact-form [name="email"]')
@@ -177,6 +179,7 @@ test("contact form sends to the intended endpoint and confirms success", async (
   const submit = page.locator('#contact-form button[type="submit"]');
   await submit.click();
   await expect(submit).toBeDisabled();
+  await expect(page.locator("#contact-status")).toHaveText("Sending…");
   release();
   await expect(page.locator("#contact-status")).toHaveText("Message sent!");
   expect(payload).toContain("Market analyst");
@@ -186,6 +189,25 @@ test("contact form sends to the intended endpoint and confirms success", async (
   await expect(page.locator('#contact-form [name="message"]')).toHaveValue("");
   await expect(submit).toBeEnabled();
   await expect(page.locator("#contact-status")).toHaveText("", { timeout: 2000 });
+});
+
+test("contact form revalidates autofilled values after an invalid submission", async ({ page }) => {
+  await page.route(endpoint, (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ success: true }),
+  }));
+  await page.goto("./");
+  await page.locator('#contact-form button[type="submit"]').click();
+  // Autofill can update values without emitting input events.
+  await page.locator("#contact-form").evaluate((form: HTMLFormElement) => {
+    (form.elements.namedItem("name") as HTMLInputElement).value = "Market analyst";
+    (form.elements.namedItem("email") as HTMLInputElement).value = "analyst@example.com";
+    (form.elements.namedItem("message") as HTMLTextAreaElement).value = "Please contact me.";
+  });
+  await page.locator('#contact-form button[type="submit"]').click();
+  await expect(page.locator("#contact-status")).toHaveText("Message sent!");
+  await expect(page.locator("#contact-message")).toHaveValue("");
 });
 
 test("a failed contact submission preserves the message and allows retry", async ({
