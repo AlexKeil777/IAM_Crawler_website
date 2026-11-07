@@ -6,7 +6,7 @@ const endpoint = "https://formsubmit.co/ajax/info@iamaicrawler.com";
 const translations = {
   de: {
     title: "IAMAI — Intelligentes IAM-Crawling", hero: "Effizient crawlen",
-    question: "Wie viel teurer sind wir?", quote: "Wow, das Originalteil ist viel zu teuer.",
+    question: "„Wenn das Teil aus dem freien Ersatzteilmarkt nicht mindestens 20 % günstiger ist, kann ich genauso gut das Originalteil kaufen“", quote: "Wow, das Originalteil ist viel zu teuer.",
     cta: "Entdecken Sie unsere Methode", method: "Unsere Methode", step: "Teil und Markt festlegen",
     contact: "Kontakt", message: "Nachricht", language: "Sprache",
     menu: "Navigation öffnen", subject: "Anfrage über die IAMAI-Website",
@@ -16,7 +16,7 @@ const translations = {
   },
   en: {
     title: "IAMAI — Intelligent IAM crawling", hero: "Crawl efficiently",
-    question: "How much more expensive are we?", quote: "Wow, the original part is far too expensive.",
+    question: "\"If the aftermarket part is not at least 20% cheaper, i may as well buy the genuine part\"", quote: "Wow, the original part is far too expensive.",
     cta: "Check out our method", method: "Our method", step: "Define the part and market",
     contact: "Contact", message: "Message", language: "Language",
     menu: "Open navigation", subject: "IAMAI website enquiry",
@@ -26,7 +26,7 @@ const translations = {
   },
   it: {
     title: "IAMAI — Crawling intelligente per l'IAM", hero: "Esplora con efficienza",
-    question: "Quanto costiamo in più?", quote: "Accidenti, il ricambio originale costa davvero troppo.",
+    question: "«Se il ricambio aftermarket non costa almeno il 20% in meno, tanto vale comprare quello originale»", quote: "Accidenti, il ricambio originale costa davvero troppo.",
     cta: "Scopri il nostro metodo", method: "Il nostro metodo", step: "Definire ricambio e mercato",
     contact: "Contatti", message: "Messaggio", language: "Lingua",
     menu: "Apri il menu di navigazione", subject: "Richiesta dal sito IAMAI",
@@ -36,7 +36,7 @@ const translations = {
   },
   ru: {
     title: "IAMAI — Интеллектуальный сбор данных об IAM", hero: "Собирайте эффективно",
-    question: "Насколько мы дороже?", quote: "Ого, оригинальная запчасть слишком дорогая.",
+    question: "«Если неоригинальная запчасть не дешевле оригинальной хотя бы на 20 %, я могу с тем же успехом купить оригинальную»", quote: "Ого, оригинальная запчасть слишком дорогая.",
     cta: "Познакомьтесь с нашим методом", method: "Наш метод", step: "Определить запчасть и рынок",
     contact: "Контакты", message: "Сообщение", language: "Язык",
     menu: "Открыть меню навигации", subject: "Обращение с сайта IAMAI",

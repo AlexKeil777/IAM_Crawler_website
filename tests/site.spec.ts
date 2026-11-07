@@ -46,7 +46,7 @@ test("the page has three focused sections and the requested hero copy", async ({
     "Wow, the original part is far too expensive. I think I'll buy an aftermarket part instead",
   );
   await expect(page.locator("#explanation-title")).toHaveText(
-    "How much more expensive are we?",
+    "\"If the aftermarket part is not at least 20% cheaper, i may as well buy the genuine part\"",
   );
   await expect(page.locator("#method-open")).toHaveText("Check out our method");
   await expect(page.locator("#method-view")).toBeHidden();
