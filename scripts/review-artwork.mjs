@@ -46,9 +46,11 @@ for (const [label, width, height] of [["desktop", 580, 520], ["mobile", 320, 300
     await Promise.all([...document.images].map((image) => image.decode()));
     return results;
   }, { width, height });
+  await page.setViewportSize({ width: width * 4, height: (height + 52) * Math.ceil(metrics.length / 4) });
   await page.screenshot({ path: `test-results/parts-${label}.png`, fullPage: true });
   if (label === "desktop") {
-    for (const [index, name] of ["disc", "pads", "wheel", "radiator", "engine", "piston", "caliper", "control-arm"].entries()) {
+    for (const [index, { part }] of metrics.entries()) {
+      const name = part.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       await page.locator("figure").nth(index).screenshot({ path: `test-results/part-${name}.png` });
     }
   }

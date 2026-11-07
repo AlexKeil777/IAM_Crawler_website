@@ -42,3 +42,30 @@ test("particle sculpture changes shape and continues after being paused", async 
   const third = await signature();
   expect(difference(second, third)).toBeGreaterThan(0.2);
 });
+
+test("headlight, muffler and bumper render in the cycle before it returns to the disc", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const start = new Date("2026-11-07T12:00:00Z");
+  await page.clock.install({ time: start });
+  await page.clock.pauseAt(new Date(start.getTime() + 100));
+  await page.goto("./");
+  const canvas = page.locator("#rotor");
+  await expect(canvas).toHaveAttribute("data-ready", "true");
+  await expect(canvas).toHaveAttribute("data-part", "brake disc");
+
+  await page.clock.runFor(14_300);
+  for (const part of ["Headlight", "Muffler", "Front bumper"]) {
+    await expect(canvas).toHaveAttribute("data-part", part);
+    const visiblePixels = await canvas.evaluate((element: HTMLCanvasElement) => {
+      const pixels = element.getContext("2d")!.getImageData(0, 0, element.width, element.height).data;
+      let visible = 0;
+      for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 20) visible++;
+      return visible;
+    });
+    expect(visiblePixels).toBeGreaterThan(1000);
+    await page.clock.runFor(2000);
+  }
+  await expect(canvas).toHaveAttribute("data-part", "Control arm");
+  await page.clock.runFor(2000);
+  await expect(canvas).toHaveAttribute("data-part", "brake disc");
+});

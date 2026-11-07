@@ -30,7 +30,7 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 
 ## Three sections
 
-1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between eight automotive parts every two seconds. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
+1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between eleven automotive parts every two seconds. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
 2. The goal of a representative IAM market sample, a concise comparison with a fixed-shop crawler, and four workflow steps.
 3. A contact form addressed to `iamaicrawler@gmail.com`.
 
@@ -60,10 +60,10 @@ For visual review, start the local development server, then run:
 node scripts/review-artwork.mjs
 ```
 
-This captures desktop and mobile page layouts plus contact sheets of all eight sculptures at a fixed camera pose. The images are saved in `test-results/`, alongside per-part render timings printed to the terminal.
+This captures desktop and mobile page layouts plus contact sheets of all eleven sculptures at a fixed camera pose. The images are saved in `test-results/`, alongside per-part render timings printed to the terminal.
 
 ## Assets and reference
 
 The visual reference was [N2 Team](https://n2team.com/), interpreted through an independent layout and identity. The IAMAI wordmark uses original vector glyphs with mirrored ivory I/A pairs around a purple central M (`#b69af7`). The favicon uses the purple M framed by mirrored ivory I rails for legibility at small sizes.
 
-The original brake disc is preserved. The seven other sculptures use sampled 3D surfaces with realistic proportions, actual depth and mechanical cutouts: control arm, brake pads, steering wheel, radiator, V8 engine block, piston and brake caliper. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope is self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. Assets are served locally; only contact submissions use FormSubmit.
+The original brake disc is preserved. The ten other sculptures use sampled 3D surfaces with realistic proportions, actual depth and mechanical cutouts: control arm, brake pads, steering wheel, radiator, V8 engine block, piston, brake caliper, headlight, muffler and bumper. The headlight has recessed projector optics, the muffler has a formed metal can and hollow exhaust pipes, and the bumper has a curved fascia with open intakes. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope is self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. Assets are served locally; only contact submissions use FormSubmit.

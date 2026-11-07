@@ -3,6 +3,9 @@
 import { buildBrakePads, buildControlArm } from "./parts/chassis";
 import { buildCaliper, buildRadiator, buildSteeringWheel } from "./parts/accessories";
 import { buildEngine, buildPiston } from "./parts/powertrain";
+import { buildHeadlight } from "./parts/headlight";
+import { buildMuffler } from "./parts/muffler";
+import { buildBumper } from "./parts/bumper";
 export type { PartPoint, PartShape } from "./part-geometry";
 
 export function createPartShapes(count: number) {
@@ -14,5 +17,8 @@ export function createPartShapes(count: number) {
     buildEngine(count),
     buildPiston(count),
     buildCaliper(count),
+    buildHeadlight(count),
+    buildMuffler(count),
+    buildBumper(count),
   ];
 }
