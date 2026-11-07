@@ -8,7 +8,7 @@ const translations = {
     title: "IAMAI — Intelligentes IAM-Crawling", hero: "Effizient crawlen",
     question: "Wie viel teurer sind wir?", quote: "Wow, das Originalteil ist viel zu teuer.",
     cta: "Entdecken Sie unsere Methode", method: "Unsere Methode", step: "Teil und Markt festlegen",
-    contact: "Kontakt", message: "Nachricht", language: "Sprache", play: "Animationen abspielen",
+    contact: "Kontakt", message: "Nachricht", language: "Sprache",
     menu: "Navigation öffnen", subject: "Anfrage über die IAMAI-Website",
     required: "Bitte füllen Sie dieses Feld aus.", invalidEmail: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
     success: "Nachricht gesendet.",
@@ -18,7 +18,7 @@ const translations = {
     title: "IAMAI — Intelligent IAM crawling", hero: "Crawl efficiently",
     question: "How much more expensive are we?", quote: "Wow, the original part is far too expensive.",
     cta: "Check out our method", method: "Our method", step: "Define the part and market",
-    contact: "Contact", message: "Message", language: "Language", play: "Play animations",
+    contact: "Contact", message: "Message", language: "Language",
     menu: "Open navigation", subject: "IAMAI website enquiry",
     required: "Please complete this field.", invalidEmail: "Please enter a valid email address.",
     success: "Message sent!",
@@ -28,7 +28,7 @@ const translations = {
     title: "IAMAI — Crawling intelligente per l'IAM", hero: "Esplora con efficienza",
     question: "Quanto costiamo in più?", quote: "Accidenti, il ricambio originale costa davvero troppo.",
     cta: "Scopri il nostro metodo", method: "Il nostro metodo", step: "Definire ricambio e mercato",
-    contact: "Contatti", message: "Messaggio", language: "Lingua", play: "Avvia le animazioni",
+    contact: "Contatti", message: "Messaggio", language: "Lingua",
     menu: "Apri il menu di navigazione", subject: "Richiesta dal sito IAMAI",
     required: "Compila questo campo.", invalidEmail: "Inserisci un indirizzo email valido.",
     success: "Messaggio inviato.",
@@ -38,7 +38,7 @@ const translations = {
     title: "IAMAI — Интеллектуальный сбор данных об IAM", hero: "Собирайте эффективно",
     question: "Насколько мы дороже?", quote: "Ого, оригинальная запчасть слишком дорогая.",
     cta: "Познакомьтесь с нашим методом", method: "Наш метод", step: "Определить запчасть и рынок",
-    contact: "Контакты", message: "Сообщение", language: "Язык", play: "Включить анимацию",
+    contact: "Контакты", message: "Сообщение", language: "Язык",
     menu: "Открыть меню навигации", subject: "Обращение с сайта IAMAI",
     required: "Заполните это поле.", invalidEmail: "Введите корректный адрес электронной почты.",
     success: "Сообщение отправлено.",
@@ -167,7 +167,7 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   expect(await source.getAttribute("transform")).toBe(finishedProjection);
 });
 
-test("reduced motion and pausing immediately complete the logo reflection", async ({ page }) => {
+test("reduced motion immediately completes the logo reflection, including a live preference change", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
@@ -181,13 +181,13 @@ test("reduced motion and pausing immediately complete the logo reflection", asyn
   await page.clock.pauseAt(new Date(start.getTime() + 100));
   await page.reload();
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "dropping");
-  await page.locator(".motion-toggle").click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
   await expect(page.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
   await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "1");
   expect(await page.locator(".logo-source").getAttribute("transform")).toBe(completedProjection);
   expect(await page.locator(".logo-mirror-housing path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d")))).toEqual(completedHousing);
-  await page.locator(".motion-toggle").click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.clock.fastForward(6000);
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
   await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "1");
@@ -255,7 +255,7 @@ for (const language of ["de", "en", "it", "ru"] as const) {
     await expect(page.locator("#contact-title")).toHaveText(copy.contact);
     await expect(page.locator('label[for="contact-message"]')).toHaveText(copy.message);
     await expect(page.locator("#language-selector")).toHaveAccessibleName(copy.language);
-    await expect(page.locator(".motion-toggle")).toHaveAttribute("aria-label", copy.play);
+    await expect(page.locator(".site-header .motion-toggle")).toHaveCount(0);
     await expect(page.locator(".menu-toggle")).toHaveAttribute("aria-label", copy.menu);
     await openMethod(page);
     await expect(page.locator("#method-title")).toHaveText(copy.method);
@@ -321,7 +321,7 @@ test("method steps work with pointer and keyboard, and back restores the story",
   await openMethod(page);
 });
 
-test("the story dissolves into moving particles and respects the global pause control", async ({ page }) => {
+test("the story dissolves into moving particles and respects a live reduced-motion preference", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("./");
   await page.locator("#method-open").click();
@@ -349,7 +349,7 @@ test("the story dissolves into moving particles and respects the global pause co
   await page.locator("#method-back").click();
   await page.locator("#method-open").click();
   await expect(page.locator("#explanation")).toHaveAttribute("data-view", "transition");
-  await page.locator(".motion-toggle").click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
   await expect(page.locator("#explanation")).toHaveAttribute("data-view", "method");
   await expect(canvas).toHaveCount(0);

@@ -1,24 +1,20 @@
-/** Deterministic samples of complete 3D automotive assemblies. The original
- * brake disc is generated separately in rotor.ts. */
-import { buildBrakePads, buildControlArm } from "./parts/chassis";
-import { buildCaliper, buildRadiator, buildSteeringWheel } from "./parts/accessories";
-import { buildEngine, buildPiston } from "./parts/powertrain";
+/** The seven reference-inspired automotive assemblies in display order. */
+import { buildControlArm } from "./parts/chassis";
+import { buildCaliper, buildSteeringWheel } from "./parts/accessories";
+import { buildAlloyWheel } from "./parts/alloy-wheel";
+import { buildEngine } from "./parts/powertrain";
 import { buildHeadlight } from "./parts/headlight";
-import { buildMuffler } from "./parts/muffler";
-import { buildBumper } from "./parts/bumper";
+import { buildExhaust } from "./parts/muffler";
 export type { PartPoint, PartShape } from "./part-geometry";
 
 export function createPartShapes(count: number) {
   return [
     buildControlArm(count),
-    buildBrakePads(count),
     buildSteeringWheel(count),
-    buildRadiator(count),
-    buildEngine(count),
-    buildPiston(count),
+    buildAlloyWheel(count),
+    buildExhaust(count),
     buildCaliper(count),
     buildHeadlight(count),
-    buildMuffler(count),
-    buildBumper(count),
+    buildEngine(count),
   ];
 }

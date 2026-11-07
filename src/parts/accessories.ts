@@ -1,189 +1,178 @@
-import { PartBuilder, type PartShape, type XY } from "../part-geometry";
+﻿import { PartBuilder, type PartShape, type Vec3, type XY } from "../part-geometry";
 
-/** A chamfered stamping or casting, rather than an infinitely sharp box. */
+const TAU = Math.PI * 2;
+
 function roundedRectangle(width: number, height: number, radius: number): XY[] {
   const vertices: XY[] = [];
   for (let corner = 0; corner < 4; corner++) {
     const angle = -Math.PI / 2 + corner * Math.PI / 2;
-    const centerX = (corner === 0 || corner === 1 ? 1 : -1) * (width / 2 - radius);
-    const centerY = (corner === 0 || corner === 3 ? -1 : 1) * (height / 2 - radius);
-    // Traverse top right, bottom right, bottom left, top left.
-    const start = angle;
-    for (let step = 0; step <= 4; step++) {
-      const theta = start + (step / 4) * Math.PI / 2;
-      vertices.push([centerX + radius * Math.cos(theta), centerY + radius * Math.sin(theta)]);
+    const x = (corner === 0 || corner === 1 ? 1 : -1) * (width / 2 - radius);
+    const y = (corner === 0 || corner === 3 ? -1 : 1) * (height / 2 - radius);
+    for (let step = 0; step <= 8; step++) {
+      const theta = angle + step * Math.PI / 16;
+      vertices.push([x + radius * Math.cos(theta), y + radius * Math.sin(theta)]);
     }
   }
   return vertices;
 }
 
-/** Keep the actual edges of a casting or seam evenly resolved in the cloud. */
-function featureOutline(part: PartBuilder, vertices: XY[], z: number, spacing = 2.7, tone = 1.1) {
+function outline(part: PartBuilder, vertices: XY[], z: number, spacing = 2.5, tone = 1.1) {
   vertices.forEach((a, index) => {
     const b = vertices[(index + 1) % vertices.length];
-    const samples = Math.max(3, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / spacing));
-    part.featureLine([a[0], a[1], z], [b[0], b[1], z], samples, tone);
+    part.featureLine([a[0], a[1], z], [b[0], b[1], z],
+      Math.max(3, Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / spacing)), tone);
   });
 }
 
+/** Flat-bottom performance wheel: shaped grips, broad airbag pad and open spokes. */
 export function buildSteeringWheel(count: number): PartShape {
   const part = new PartBuilder(19031);
-
-  // A leather grip has a round section all the way round its rim. The shallow
-  // seam and the thicker thumb rests sit on that section, not on a flat disk.
-  part.torus([0, 0, 10], 178, 23, [0, 0, 1], 0.78);
-  part.torus([0, 0, -10], 177, 1.1, [0, 0, 1], 0.5);
-  // The continuous stitching seam follows the front of the leather section.
-  part.featureCircle([0, 0, -13], 178, [0, 0, 1], 500, 0.92);
-  for (const side of [-1, 1]) {
-    part.ellipsoid([side * 167, -49, 2], [23, 37, 23], 0.77);
-
-    // The metal spoke narrows from the grip into the padded airbag assembly.
-    const spoke: XY[] = [
-      [side * 175, -48], [side * 158, -64], [side * 58, -35],
-      [side * 43, 14], [side * 80, 20], [side * 156, -7],
-    ];
-    part.extrude(spoke, 18, [0, 0, -7], 1.05);
-    part.featureLine([side * 158, -64, -16], [side * 58, -35, -16], 80, 1.12);
-    part.featureLine([side * 80, 20, -16], [side * 156, -7, -16], 65, 1.12);
-    const switchPod = roundedRectangle(49, 26, 7);
-    part.group([side * 112, -20, -20], [0, 0, side * -0.2], () => {
-      part.extrude(switchPod, 5, [0, 0, 0], 0.5);
-      for (const x of [-12, 2, 15]) {
-        part.box([x, 0, -3.6], [9, 11, 1.4], 0.85);
+  // Leave a small three-quarter angle while showing the flat lower rim clearly.
+  part.group([0, 0, 0], [0.24, 0.22, 0.26], () => {
+    const rimCenter = (angle: number): XY => [178 * Math.cos(angle), Math.min(158, 180 * Math.sin(angle))];
+    const rimPoint = (angle: number, section: number): Vec3 => {
+      const center = rimCenter(angle);
+      const before = rimCenter(angle - 0.001), after = rimCenter(angle + 0.001);
+      const dx = after[0] - before[0], dy = after[1] - before[1];
+      const length = Math.hypot(dx, dy);
+      // Thick leather sides taper into slimmer carbon sections at top/bottom.
+      const width = 21 + 10 * Math.abs(Math.cos(angle)) ** 4;
+      return [center[0] + dy / length * width * Math.cos(section),
+        center[1] - dx / length * width * Math.cos(section), 7 + 24 * Math.sin(section)];
+    };
+    const segments = 128, sections = 16;
+    for (let i = 0; i < segments; i++) {
+      const a = i * TAU / segments, b = (i + 1) * TAU / segments;
+      const tone = Math.abs(Math.cos(a)) > 0.76 ? 1.0 : 0.67;
+      for (let j = 0; j < sections; j++) {
+        const u = j * TAU / sections, v = (j + 1) * TAU / sections;
+        part.quad(rimPoint(a, u), rimPoint(b, u), rimPoint(b, v), rimPoint(a, v), tone);
       }
-    });
-  }
+      // A stitched leather seam follows the actual flattened, sculpted rim.
+      part.featureLine(rimPoint(a, -1.02), rimPoint(b, -1.02), 4, 1.08);
+      if (i % 2 === 0 && Math.abs(Math.cos(a)) > 0.6) {
+        part.featureLine(rimPoint(a, -1.66), rimPoint(a + 0.018, -1.66), 3, 1.14);
+      }
+    }
 
-  // Split lower spoke: the narrow open slot is a useful recognition detail.
-  part.extrude(
-    [[-38, 42], [38, 42], [30, 153], [0, 179], [-30, 153]],
-    16, [0, 0, -2], 1.1,
-    [[[-13, 78], [13, 78], [11, 146], [0, 158], [-11, 146]]],
-  );
-  featureOutline(part, [[-13, 78], [13, 78], [11, 146], [0, 158], [-11, 146]], -10, 2.3, 1.17);
-  part.featureLine([-30, 153, -10], [0, 179, -10], 36, 1.1);
-  part.featureLine([0, 179, -10], [30, 153, -10], 36, 1.1);
+    for (const side of [-1, 1]) {
+      // The inboard thumb scallops make the grips less like a circular torus.
+      part.ellipsoid([side * 151, -58, -2], [25, 36, 21], 1.02);
+      const spoke: XY[] = [
+        [side * 167, -38], [side * 143, -24], [side * 78, -30],
+        [side * 73, 43], [side * 137, 58], [side * 159, 36],
+      ];
+      part.extrude(spoke, 18, [0, 0, -1], 0.57);
+      outline(part, spoke, -10, 3.1, 1.03);
+      const switchPanel: XY[] = [
+        [side * 92, -17], [side * 137, -11], [side * 153, 13],
+        [side * 137, 39], [side * 89, 31],
+      ];
+      part.extrude(switchPanel, 5, [0, 0, -14], 0.4);
+      for (const [x, y] of [[112, 6], [139, 13]]) {
+        part.cylinder([side * x, y, -19], 7, 5, [0, 0, 1], 3.5, 1.02);
+        part.featureCircle([side * x, y, -21.5], 3.5, [0, 0, 1], 32, 1.1);
+      }
+      // Small lower grip accents border the two open areas either side of the spoke.
+      part.extrude([[side * 93, 49], [side * 139, 57], [side * 148, 70], [side * 88, 63]],
+        6, [0, 0, -15], 1.03);
+    }
 
-  const hub = roundedRectangle(139, 113, 31);
-  part.extrude(hub, 23, [0, 3, -21], 0.64);
-  featureOutline(part, hub.map(([x, y]) => [x, y + 3]), -32.5, 2.2, 0.94);
-  // A slightly domed padded cover, with a genuine recessed seam at its edge.
-  part.ellipsoid([0, 3, -30], [66, 52, 15], 0.85);
-  part.cylinder([0, 3, 43], 32, 41, [0, 0, 1], 12, 0.56);
+    const lowerSpoke: XY[] = [[-54, 71], [54, 71], [41, 143], [30, 163], [-30, 163], [-41, 143]];
+    const slot: XY[] = [[-25, 100], [25, 100], [19, 142], [12, 148], [-12, 148], [-19, 142]];
+    part.extrude(lowerSpoke, 19, [0, 0, 0], 0.72, [slot]);
+    outline(part, lowerSpoke, -9.5, 2.2, 1.07);
+    outline(part, slot, -9.5, 2.0, 1.1);
+
+    // A broad, padded squircle echoes the photographed airbag assembly. Its
+    // front bezel is a separate thin ring, leaving the center face visible.
+    const pad = roundedRectangle(166, 163, 39).map(([x, y]): XY => [x, y + 19]);
+    const face = roundedRectangle(154, 151, 35).map(([x, y]): XY => [x, y + 18]);
+    part.extrude(pad, 28, [0, 0, -25], 0.97);
+    for (let i = 0; i < pad.length; i++) {
+      const j = (i + 1) % pad.length;
+      part.quad([pad[i][0], pad[i][1], -39], [pad[j][0], pad[j][1], -39],
+        [face[j][0], face[j][1], -48], [face[i][0], face[i][1], -48], 1.06);
+    }
+    part.extrude(face, 3, [0, 0, -49], 1.02);
+    outline(part, face, -50.5, 2.5, 1.14);
+    const bezel = roundedRectangle(126, 116, 31).map(([x, y]): XY => [x, y + 12]);
+    const inset = roundedRectangle(114, 104, 27).map(([x, y]): XY => [x, y + 12]);
+    part.extrude(bezel, 4, [0, 0, -52], 0.56, [inset]);
+    outline(part, inset, -54, 2.5, 1.05);
+    part.cylinder([0, 19, 46], 31, 48, [0, 0, 1], 12, 0.5);
+  });
   return part.finish("Steering wheel", count);
 }
 
-export function buildRadiator(count: number): PartShape {
-  const part = new PartBuilder(28411);
-
-  // A real cross-flow radiator: broad, thin aluminium core, with polymer tanks
-  // at the sides. Leave the spaces between tubes open throughout its depth.
-  const coreWidth = 316;
-  for (let row = 0; row < 25; row++) {
-    const y = -104 + row * (208 / 24);
-    part.box([0, y, 0], [coreWidth, 1.8, 25], 1.05);
-    // Flattened tube mouths remain in front of the recessed fin pack. Their
-    // bright lips define the rows even when the sculpture is seen small.
-    part.box([0, y, -16], [coreWidth, 2.5, 4], 1.22);
-    part.cylinder([0, y, -18], 1.2, coreWidth, [1, 0, 0], 0, 1.3);
-    part.featureLine([-158, y, -19.2], [158, y, -19.2], 56, 1.2);
-  }
-
-  // Thin corrugated metal fins between the horizontal coolant tubes. Each
-  // strip has a shallow fold; the front edges make the dense core readable.
-  for (let column = 0; column < 53; column++) {
-    const x = -155 + column * (310 / 52);
-    part.quad([x, -108, -9], [x + 1.3, 108, -9], [x + 3, 108, 0], [x + 1.7, -108, 0], 0.48);
-    part.quad([x + 1.7, -108, 0], [x + 3, 108, 0], [x + 1.3, 108, -9], [x, -108, -9], 0.48);
-    part.quad([x + 1.7, -108, 0], [x + 3, 108, 0], [x + 1.3, 108, 9], [x, -108, 9], 0.48);
-    part.quad([x, -108, 9], [x + 1.3, 108, 9], [x + 3, 108, 0], [x + 1.7, -108, 0], 0.48);
-  }
-
-  for (const side of [-1, 1]) {
-    part.extrude(roundedRectangle(37, 237, 11), 42, [side * 181, 0, 0], 0.58);
-    for (const x of [side * 162.5, side * 199.5]) {
-      part.featureLine([x, -107.5, -21], [x, 107.5, -21], 72, 1.03);
-    }
-    // Rolled header plate and crimp tabs securing the tank to the core.
-    part.box([side * 160, 0, 0], [7, 230, 38], 0.95);
-    for (let y = -102; y <= 103; y += 18.5) {
-      part.box([side * 165, y, -23], [9, 7, 5], 1.05);
-    }
-    part.box([0, side * 113, 0], [327, 8, 36], 0.91);
-    part.featureLine([-163.5, side * 117, -18], [163.5, side * 117, -18], 90, 1.12);
-    part.cylinder([side * 177, -130, 0], 6, 25, [0, 1, 0], 0, 0.67);
-    part.cylinder([side * 177, 130, 0], 6, 25, [0, 1, 0], 0, 0.67);
-    part.cylinder([side * 177, 132, 0], 10, 5, [0, 1, 0], 6, 0.48);
-  }
-
-  // Offset inlet/outlet necks, with a retaining bead and visible hollow ends.
-  for (const [side, y] of [[-1, -72], [1, 72]]) {
-    part.cylinder([side * 211, y, -2], 14, 46, [1, 0, 0], 10, 0.69);
-    part.torus([side * 229, y, -2], 13.6, 1.7, [1, 0, 0], 0.91);
-    part.featureCircle([side * 234, y, -2], 10, [1, 0, 0], 60, 1.12);
-  }
-  // The small drain plug belongs below the outlet tank.
-  part.cylinder([181, 116, -13], 7, 14, [0, 1, 0], 0, 0.63);
-  return part.finish("Radiator", count);
-}
-
+/** A sculpted fixed caliper, with two banks and an empty channel for the disc. */
 export function buildCaliper(count: number): PartShape {
   const part = new PartBuilder(31607);
-  part.group([0, 0, 0], [0.65, -0.1, 0.03], () => {
-    // An open-bottom casting embraces the disc. The jaws have individual
-    // rounded ends, rather than making an undifferentiated rectangular frame.
-    const jaw: XY[] = [
-      [-153, 65], [-154, -28], [-133, -70], [-88, -98],
-      [77, -98], [126, -81], [151, -44], [157, 45],
-      [141, 73], [116, 79], [96, 61], [96, -8],
-      [73, -36], [-74, -36], [-99, -13], [-99, 59],
-      [-119, 81], [-143, 78],
+  part.group([0, 0, 0], [0.45, 0.03, 0.16], () => {
+    const casting: XY[] = [
+      [-176, 0], [-158, -30], [-126, -55], [-86, -72], [-35, -78],
+      [47, -77], [95, -68], [133, -49], [160, -23], [177, 7],
+      [166, 24], [135, 23], [108, 36], [62, 39], [-67, 39],
+      [-109, 33], [-137, 22], [-166, 20],
     ];
-    part.extrude(jaw, 32, [0, 0, -55], 0.94);
-    part.extrude(jaw, 38, [0, 0, 46], 0.78);
-    featureOutline(part, jaw, -71, 2.8, 1.12);
-
-    // The paired cylindrical piston housings protrude from the inboard bank.
-    // The machined lips are visible down in the open slot between the jaws.
-    for (const x of [-58, 58]) {
-      part.cylinder([x, -36, 49], 47, 48, [0, 0, 1], 34, 0.83);
-      part.ellipsoid([x, -36, 78], [47, 47, 17], 0.76);
-      part.cylinder([x, -36, 37], 32, 8, [0, 0, 1], 0, 0.5);
-      part.cylinder([x, -36, 23], 38, 3, [0, 0, 1], 34, 1.13);
-      part.featureCircle([x, -36, 21.5], 34, [0, 0, 1], 180, 1.18);
+    const face = casting.map(([x, y]): XY => [x * 0.94, y * 0.84 - 5]);
+    part.extrude(casting, 35, [0, 0, -20], 0.89);
+    part.extrude(casting, 31, [0, 0, 69], 0.71);
+    // The chamfered shoulder rolls from the top and ends into a broad front
+    // casting, rather than leaving a rectangular bracket silhouette.
+    for (let i = 0; i < casting.length; i++) {
+      const j = (i + 1) % casting.length;
+      part.quad([casting[j][0], casting[j][1], -37.5], [casting[i][0], casting[i][1], -37.5],
+        [face[i][0], face[i][1], -55], [face[j][0], face[j][1], -55], 1.07);
     }
+    part.extrude(face, 3, [0, 0, -55], 0.96);
+    outline(part, face, -56.5, 2.8, 1.12);
 
-    // Two side bridges cross the deep rotor channel. The broad central gap is
-    // left empty through the whole part so its depth is visible in this pose.
-    for (const x of [-126, 126]) {
-      part.extrude(roundedRectangle(35, 92, 12), 125, [x, -15, -1], 0.88);
-      part.extrude(roundedRectangle(31, 104, 11), 6, [x, -13, -75], 1.04);
-      for (const edgeX of [x - 15.5, x + 15.5]) {
-        part.featureLine([edgeX, -54, -78], [edgeX, 28, -78], 70, 1.13);
-      }
+    // Arched shoulder rib and a lower casting seam give the front its familiar
+    // long, curved performance-caliper profile without an applied brand mark.
+    const shoulder: Vec3[] = [[-142, -30, -56.8], [-114, -48, -57], [-74, -58, -57],
+      [0, -61, -57], [73, -55, -57], [117, -38, -56.8], [142, -16, -55.8]];
+    for (let i = 0; i < shoulder.length - 1; i++) {
+      part.featureLine(shoulder[i], shoulder[i + 1], 38, 1.12);
     }
-    part.extrude(roundedRectangle(205, 18, 8), 7, [-3, -79, -75], 1.08);
-    part.featureLine([-97.5, -88, -78.5], [91.5, -88, -78.5], 95, 1.15);
-    part.featureLine([-97.5, -70, -78.5], [91.5, -70, -78.5], 95, 1.15);
-    // Short pad ledges sit high in the casting instead of filling the slot.
-    part.box([0, -37, -30], [174, 12, 8], 0.56);
-    part.box([0, -37, 18], [174, 12, 8], 0.56);
+    part.featureLine([-101, 21, -57], [98, 21, -57], 125, 1.04);
 
-    for (const x of [-165, 165]) {
-      const side = Math.sign(x);
-      part.box([side * 145, 54, 44], [43, 25, 31], 0.82);
-      part.cylinder([x, 54, 41], 18, 41, [0, 0, 1], 9, 0.99);
-      part.cylinder([side * 127, -51, -78], 7, 8, [0, 0, 1], 3, 1.09);
-      part.featureCircle([x, 54, 20.5], 9, [0, 0, 1], 60, 1.18);
-      part.featureCircle([side * 127, -51, -82], 7, [0, 0, 1], 65, 1.16);
+    // Separate bridges span the rotor slot only at its ends, leaving the long
+    // central channel open all the way through the lower side of the casting.
+    for (const x of [-125, 125]) {
+      part.extrude(roundedRectangle(35, 66, 10), 96, [x, -12, 24], 0.85);
+      part.cylinder([x, -21, -59], 7.5, 7, [0, 0, 1], 3, 1.13);
+      part.featureCircle([x, -21, -62.5], 3, [0, 0, 1], 40, 1.16);
     }
-    // One offset hydraulic inlet and a bleeder produce the asymmetry of an
-    // actual cast component; a thin crossover pipe joins the two banks.
-    part.cylinder([93, -102, 52], 5, 26, [0, 1, 0], 1.7, 1.14);
-    part.cylinder([93, -97, 52], 8, 6, [0, 1, 0], 0, 0.86);
-    part.cylinder([-112, -96, 0], 3, 103, [0, 0, 1], 0, 1.15);
-    part.cylinder([-153, -17, 53], 8, 22, [1, 0, 0], 3, 1.08);
+    // Three different-size piston cups sit inside the opposing bank. Their
+    // circular lips remain visible from the open edge and in three-quarter view.
+    for (const [x, radius] of [[-86, 32], [0, 35], [86, 30]]) {
+      part.cylinder([x, 10, 55], radius, 35, [0, 0, 1], radius - 6, 0.64);
+      part.cylinder([x, 10, 35], radius + 1, 5, [0, 0, 1], radius - 5, 1.13);
+      part.featureCircle([x, 10, 32.5], radius - 5, [0, 0, 1], 100, 1.16);
+      part.ellipsoid([x, 26, 79], [radius + 3, 30, 13], 0.75);
+    }
+    for (const side of [-1, 1]) {
+      part.box([side * 112, 42, 70], [31, 37, 26], 0.73);
+      part.cylinder([side * 112, 65, 67], 21, 32, [0, 0, 1], 9, 0.96);
+      part.featureCircle([side * 112, 65, 51], 9, [0, 0, 1], 65, 1.14);
+    }
+    part.box([0, 31, -3], [178, 10, 8], 0.46);
+    part.box([0, 31, 40], [178, 10, 8], 0.46);
+
+    // Hydraulic bleeder and the bent crossover pipe are attached to the casting.
+    part.cylinder([-113, -79, 61], 5, 25, [0, 1, 0], 1.7, 1.13);
+    part.cylinder([-113, -73, 61], 8, 7, [0, 1, 0], 0, 0.93);
+    for (const [a, b] of [
+      [[139, -43, -27], [154, -57, -18]],
+      [[154, -57, -18], [154, -57, 64]],
+      [[154, -57, 64], [139, -43, 72]],
+    ] as [Vec3, Vec3][]) {
+      const axis: Vec3 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      part.cylinder([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2],
+        3, Math.hypot(...axis), axis, 0, 1.08);
+      part.featureLine(a, b, 24, 1.13);
+    }
   });
   return part.finish("Brake caliper", count);
 }

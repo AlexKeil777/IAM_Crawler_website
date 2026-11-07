@@ -1,5 +1,6 @@
 /** A code-drawn particle sculpture. No external images or WebGL dependency. */
 import { createPartShapes, type PartShape } from "./part-shapes";
+import { ParticlePrices, PRICE_OFFERS } from "./part-prices";
 
 type Particle = {
   x: number;
@@ -24,6 +25,9 @@ export class ParticleRotor {
   private time = 0;
   private morphTime = 0;
   private shapes: PartShape[] = [];
+  private prices = new ParticlePrices(() => {
+    if (this.paused) this.draw();
+  });
   private paused = true;
   private visible = true;
   private pointer = { x: 0, y: 0 };
@@ -37,13 +41,9 @@ export class ParticleRotor {
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d", { alpha: true });
+    const count = window.innerWidth < 621 ? 5500 : 8800;
+    this.shapes = createPartShapes(count);
     this.makeParticles();
-    const otherShapes = createPartShapes(this.particles.length);
-    this.shapes = [
-      { name: "brake disc", points: this.particles.map(({ x, y, z }) => ({ x, y, z })) },
-      ...otherShapes.slice(1),
-      otherShapes[0],
-    ];
     this.projected = new Float32Array(this.particles.length * 7);
     new ResizeObserver(() => this.resize()).observe(canvas);
     new IntersectionObserver(
@@ -86,34 +86,10 @@ export class ParticleRotor {
       seed = (seed * 16807) % 2147483647;
       return (seed - 1) / 2147483646;
     };
-    const count = window.innerWidth < 621 ? 4200 : 7600;
-    for (let i = 0; i < count; i++) {
-      const angle = random() * Math.PI * 2;
-      let radius: number;
-      let z: number;
-      if (i < count * 0.73) {
-        radius = Math.sqrt(112 ** 2 + random() * (224 ** 2 - 112 ** 2));
-        z = (random() > 0.32 ? 12 : -12) + random() * 2;
-        // Drilled holes on the braking surface leave recognisable negative space.
-        const holeAngle = (Math.round(angle / (Math.PI / 6)) * Math.PI) / 6;
-        const distance = Math.hypot(
-          Math.cos(angle) * radius - Math.cos(holeAngle) * 177,
-          Math.sin(angle) * radius - Math.sin(holeAngle) * 177,
-        );
-        if (distance < 8) continue;
-      } else if (i < count * 0.86) {
-        radius = 224 + random() * 2;
-        z = random() * 24 - 12;
-      } else if (i < count * 0.95) {
-        radius = 90 + random() * 23;
-        z = 13 + random() * 40;
-      } else {
-        radius = 47 + random() * 44;
-        z = 53 + random() * 2;
-      }
+    for (const { x, y, z } of this.shapes[0].points) {
       this.particles.push({
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius,
+        x,
+        y,
         z,
         seed: random(),
         size: 0.42 + random() * 0.7,
@@ -123,24 +99,6 @@ export class ParticleRotor {
         velocityX: 0,
         velocityY: 0,
       });
-    }
-    // Edge rings make a mechanical object legible without drawing a solid surface.
-    for (const radius of [47, 90, 112, 224]) {
-      for (let i = 0; i < 330; i++) {
-        const angle = (i / 330) * Math.PI * 2;
-        this.particles.push({
-          x: Math.cos(angle) * radius,
-          y: Math.sin(angle) * radius,
-          z: radius < 112 ? 54 : 13,
-          seed: random(),
-          size: 0.75,
-          accent: false,
-          offsetX: 0,
-          offsetY: 0,
-          velocityX: 0,
-          velocityY: 0,
-        });
-      }
     }
   }
 
@@ -202,7 +160,7 @@ export class ParticleRotor {
     ctx.clearRect(0, 0, this.width, this.height);
     const t = this.time;
     // Hold each component long enough to read it, then move the same particles
-    // into the next one. The last component transitions back into the disc.
+    // into the next one. The engine block transitions back into the control arm.
     const hold = 1.25;
     const transition = 0.75;
     const cycle = hold + transition;
@@ -212,16 +170,19 @@ export class ParticleRotor {
     const blend = progress * progress * (3 - 2 * progress);
     const from = this.shapes[shapeIndex].points;
     const to = this.shapes[nextIndex].points;
-    this.canvas.dataset.part = this.shapes[shapeIndex].name;
+    if (this.canvas.dataset.part !== this.shapes[shapeIndex].name) {
+      this.canvas.dataset.part = this.shapes[shapeIndex].name;
+      this.canvas.dataset.priceCount = String(PRICE_OFFERS[shapeIndex].length);
+      this.canvas.dataset.prices = JSON.stringify(PRICE_OFFERS[shapeIndex]);
+    }
     const surfaceBlend = (from[0].nz === undefined ? 0 : 1) * (1 - blend)
       + (to[0].nz === undefined ? 0 : 1) * blend;
     // Gradually loosen the surface during morphs and re-form it at the end.
     // This avoids hidden particles popping into view at the transition edges.
-    // The original brake disc retains its original rendering.
     const occlusionWeight = surfaceBlend * Math.cos(Math.PI * blend) ** 2;
     const occlude = occlusionWeight > 0.001;
     if (occlude) this.depthBuffer.fill(Infinity);
-    const scale = Math.min(this.width / 590, this.height / 520) * 0.95;
+    const scale = Math.min(this.width / 590, this.height / 520) * 0.83;
     const yaw = -0.55 + Math.sin(t * 0.12) * 0.14 + this.pointer.x * 0.15;
     const tilt = -0.4 + this.pointer.y * 0.13;
     const turn = -0.34 + Math.sin(t * 0.12) * 0.06;
@@ -337,6 +298,15 @@ export class ParticleRotor {
       const size = this.projected[offset + 4];
       ctx.fillRect(this.projected[offset], this.projected[offset + 1], size, size);
     }
+    this.prices.draw(ctx, {
+      width: this.width,
+      height: this.height,
+      shapeIndex,
+      nextIndex,
+      blend,
+      time: t,
+      paused: this.paused,
+    });
     // Sparse motes slowly travel away from the component and evaporate.
     for (let i = 0; i < 43; i++) {
       const progress = (i / 43 + t * 0.016) % 1;

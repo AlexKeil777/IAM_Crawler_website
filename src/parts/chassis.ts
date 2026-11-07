@@ -1,36 +1,84 @@
 import { PartBuilder, type PartShape, type Vec3, type XY } from "../part-geometry";
 
 export function buildControlArm(count: number): PartShape {
-  const part = new PartBuilder(4321);
-  // Pressed steel follows two swept arms. The open centre and differently
-  // oriented inboard bushes are physical features rather than painted rings.
+  const part = new PartBuilder(43217);
+  // A wide aluminium casting, rather than two generic rods: the thin web
+  // closes the bottoms of the deep triangular pockets between cast ribs.
   const outline: XY[] = [
-    [-165, -128], [-133, -151], [-91, -126], [157, -43],
-    [190, -24], [197, 20], [160, 46], [-91, 127],
-    [-133, 151], [-165, 128], [-137, 88], [109, 0], [-137, -88],
+    [-131, -140], [-115, -153], [-94, -151], [-78, -111],
+    [-60, -49], [-35, -24], [15, 1], [91, 28], [166, 39],
+    [182, 52], [177, 72], [152, 82], [109, 82], [34, 67],
+    [-45, 64], [-132, 80], [-155, 112], [-186, 110],
+    [-201, 90], [-194, 64], [-174, 43], [-123, 4],
+    [-95, -32], [-110, -86],
   ];
-  part.extrude(outline, 24, [0, 0, 0], 0.84);
-  for (const sign of [-1, 1]) {
-    const rib: XY[] = [[-132, sign * 119], [-107, sign * 118], [143, sign * 25], [134, sign * 15], [-117, sign * 100]];
-    part.extrude(rib, 9, [0, 0, -16], 1.08);
-    // A transverse front bush and a vertical rear compliance bush.
-    const axis: Vec3 = sign < 0 ? [0, 1, 0] : [0, 0, 1];
-    part.cylinder([-145, sign * 119, 0], 29, 64, axis, 20, 0.9);
-    part.cylinder([-145, sign * 119, 0], 20, 54, axis, 11, 0.4);
-    part.cylinder([-145, sign * 119, 0], 12, 70, axis, 7, 1.1);
-    for (const end of [-1, 1]) {
-      const cap: Vec3 = [-145, sign * 119 + axis[1] * end * 34, axis[2] * end * 34];
-      part.cylinder([-145, sign * 119 + axis[1] * end * 32, axis[2] * end * 32], 31, 4, axis, 20, 1);
-      part.featureCircle(cap, 20, axis, 80, 1.05);
-      part.featureCircle(cap, 31, axis, 100, 1.05);
+  const pockets: XY[][] = [
+    [[-113, -114], [-99, -122], [-77, -51], [-89, -47]],
+    [[-83, -25], [-51, -11], [-60, 40], [-126, 51]],
+    [[-40, -4], [55, 29], [39, 47], [-46, 41]],
+    [[65, 33], [132, 44], [153, 53], [129, 62], [55, 48]],
+    [[-139, 29], [-119, 33], [-141, 58], [-174, 71]],
+  ];
+  part.group([0, 0, 0], [0.08, -0.06, 0.17], () => {
+    part.extrude(outline, 7, [0, 0, 7], 0.46);
+    part.extrude(outline, 26, [0, 0, -9], 0.96, pockets);
+    // Fine seams catch the machined upper edges while the recessed floor
+    // remains a broad, shaded surface below each pocket.
+    for (const pocket of pockets) {
+      pocket.forEach(([x, y], i) => {
+        const [xx, yy] = pocket[(i + 1) % pocket.length];
+        part.featureLine([x, y, -22], [xx, yy, -22], 45, 1.14);
+      });
     }
-  }
-  part.cylinder([163, 0, -1], 35, 45, [0, 0, 1], 0, 0.85);
-  part.cylinder([163, 0, -27], 27, 10, [0, 0, 1], 0, 0.5);
-  part.torus([163, 0, -32], 22, 4, [0, 0, 1], 0.55);
-  part.cylinder([163, 0, -50], 11, 37, [0, 0, 1], 0, 1.12);
-  part.cylinder([163, 0, -67], 15, 10, [0, 0, 1], 0, 1.05);
-  part.featureCircle([163, 0, -32], 27, [0, 0, 1], 160);
+    // The heavy lower flange bends from the inner bush toward the long arm.
+    part.extrude([
+      [-185, 72], [-146, 60], [-58, 45], [38, 48],
+      [111, 65], [167, 56], [172, 69], [113, 81],
+      [33, 64], [-45, 62], [-132, 79], [-170, 97],
+    ], 16, [0, 0, -13], 1.04);
+    // Small circular casting bosses occur where the three webs meet.
+    for (const [x, y] of [[-92, -33], [-52, -17], [-57, 48], [-133, 58], [46, 50], [133, 65]]) {
+      part.cylinder([x, y, -24], 5.5, 4, [0, 0, 1], 0, 1.1);
+    }
+
+    // Both inboard mounts retain a metal sleeve, dark rubber and an actual
+    // empty bolt bore. Their differing axes are part of the reference casting.
+    part.group([-174, 105, 1], [0.3, -0.1, -0.18], () => {
+      part.cylinder([0, 0, 0], 28, 65, [0, 1, 0], 23, 0.96);
+      part.cylinder([0, 0, 0], 23, 69, [0, 1, 0], 9, 0.3);
+      part.cylinder([0, 0, 0], 11, 73, [0, 1, 0], 6, 1.05);
+      part.featureCircle([0, 35, 0], 23, [0, 1, 0], 110, 0.65);
+      part.featureCircle([0, 33, 0], 28, [0, 1, 0], 140, 1.13);
+    });
+    part.group([176, 56, 0], [0.02, -0.22, 0.04], () => {
+      part.cylinder([0, 0, 0], 28, 51, [1, 0, 0], 22, 0.96);
+      part.cylinder([0, 0, 0], 22, 58, [1, 0, 0], 9, 0.29);
+      part.cylinder([0, 0, 0], 10.5, 63, [1, 0, 0], 6, 1.05);
+      // Separate pressed mounting ears form the flange beyond the bush.
+      const flange: XY[] = [
+        [-18, -33], [-12, -59], [3, -67], [13, -61], [11, -32],
+        [26, -15], [29, 14], [13, 35], [11, 57], [-2, 63],
+        [-15, 57], [-18, 29], [-29, 10], [-27, -12],
+      ];
+      part.group([24, 0, 0], [0, Math.PI / 2, 0], () => {
+        const holes = [-53, 51].map((y) => Array.from({ length: 24 }, (_, i): XY => {
+          const angle = i * Math.PI * 2 / 24;
+          return [-1 + 6 * Math.cos(angle), y + 6 * Math.sin(angle)];
+        }));
+        part.extrude(flange, 9, [0, 0, 0], 1.02, holes);
+      });
+    });
+
+    // A stacked rubber boot and threaded ball-joint stud top the short stem.
+    part.cylinder([-112, -146, -5], 21, 26, [0, 1, 0], 0, 0.79);
+    for (const [y, radius] of [[-165, 20], [-172, 18], [-179, 15]]) {
+      part.torus([-112, y, -5], radius, 3, [0, 1, 0], 0.38);
+    }
+    part.cylinder([-112, -191, -5], 8, 37, [0, 1, 0], 0, 1.1);
+    for (let y = -207; y < -189; y += 3) {
+      part.torus([-112, y, -5], 8, 0.65, [0, 1, 0], 0.98);
+    }
+  });
   return part.finish("Control arm", count);
 }
 

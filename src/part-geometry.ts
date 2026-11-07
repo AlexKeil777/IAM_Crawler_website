@@ -38,6 +38,7 @@ export class PartBuilder {
   private surfaces: Surface[] = [];
   private features: Feature[] = [];
   private frame: Frame = { origin: [0, 0, 0], axes: [[1, 0, 0], [0, 1, 0], [0, 0, 1]] };
+  private surfaceWeight = 1;
 
   constructor(private seed = 8317) {}
 
@@ -49,12 +50,20 @@ export class PartBuilder {
   private surface(area: number, sample: (u: number, v: number) => SurfacePoint, tone: number, edge = 0) {
     if (area <= 0) return;
     const frame = this.frame;
-    this.surfaces.push({ area, sample: (u, v) => {
+    this.surfaces.push({ area: area * this.surfaceWeight, sample: (u, v) => {
       const point = sample(u, v);
       const position = add(frame.origin, direction(frame, point.position));
       const normal = unit(direction(frame, point.normal));
       return { x: position[0], y: position[1], z: position[2], nx: normal[0], ny: normal[1], nz: normal[2], tone, edge };
     } });
+  }
+
+  /** Retain the full geometry while choosing its share of the surface samples.
+   * Small weights suit large supporting shells behind more important detail. */
+  weightedSurfaces(weight: number, build: () => void) {
+    const previous = this.surfaceWeight;
+    this.surfaceWeight *= weight;
+    try { build(); } finally { this.surfaceWeight = previous; }
   }
 
   private feature(samples: number, sample: (u: number) => SurfacePoint, tone: number) {

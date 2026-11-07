@@ -94,27 +94,48 @@ test("development and deployed files render the same layout at both URL depths",
   expect(frames[2].equals(frames[0])).toBe(true);
 });
 
-test("particles scatter around the cursor, return, and stop when motion is paused", async ({
+test("particles scatter around the cursor, return, and stop with reduced motion", async ({
   page,
+  context,
 }) => {
-  await page.goto("./");
-  await expect(page.locator("html")).toHaveAttribute("data-motion", "playing");
+  const control = await context.newPage();
+  const start = new Date("2026-11-07T12:00:00Z");
+  for (const scene of [page, control]) {
+    await scene.emulateMedia({ reducedMotion: "no-preference" });
+    await scene.clock.install({ time: start });
+    await scene.clock.pauseAt(new Date(start.getTime() + 100));
+    await scene.goto("./");
+    await scene.evaluate(() => document.fonts.ready);
+    await expect(scene.locator("html")).toHaveAttribute("data-motion", "playing");
+    await expect(scene.locator("#rotor")).toHaveAttribute("data-ready", "true");
+  }
   const canvas = page.locator("#rotor");
-  await expect(canvas).toBeVisible();
-  await page.evaluate(async () => {
-    await document.fonts.ready;
-    await Promise.all(
-      document
-        .getAnimations()
-        .filter(
-          (animation) =>
-            animation.playState !== "paused" &&
-            animation.effect?.getTiming().iterations !== Infinity,
-        )
-        .map((animation) => animation.finished.catch(() => {})),
-    );
+  const controlCanvas = control.locator("#rotor");
+  const advance = async (milliseconds: number) => {
+    await Promise.all([
+      page.clock.runFor(milliseconds),
+      control.clock.runFor(milliseconds),
+    ]);
+  };
+  // An untouched sculpture at the same elapsed time separates cursor effects
+  // from ordinary changes of part, camera pose and ambient particle movement.
+  const signature = (target: typeof canvas) => target.evaluate((element: HTMLCanvasElement) => {
+    const { width, height } = element;
+    const pixels = element.getContext("2d")!.getImageData(0, 0, width, height).data;
+    const cells = Array<number>(32 * 32).fill(0);
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        cells[Math.floor(y * 32 / height) * 32 + Math.floor(x * 32 / width)] +=
+          pixels[(y * width + x) * 4 + 3];
+      }
+    }
+    const total = cells.reduce((sum, value) => sum + value, 0);
+    return cells.map((value) => value / total);
   });
-  // Find a populated part of the brake disc, then observe the rendered pixels.
+  const difference = (a: number[], b: number[]) =>
+    a.reduce((sum, value, i) => sum + Math.abs(value - b[i]), 0);
+  await advance(250);
+  expect(difference(await signature(canvas), await signature(controlCanvas))).toBeLessThan(0.02);
   const patch = await canvas.evaluate((element: HTMLCanvasElement) => {
     const ctx = element.getContext("2d")!;
     const ratio = element.width / element.clientWidth;
@@ -137,8 +158,8 @@ test("particles scatter around the cursor, return, and stop when motion is pause
     return best;
   });
   expect(patch.density).toBeGreaterThan(1000);
-  const density = () =>
-    canvas.evaluate((element: HTMLCanvasElement, patch) => {
+  const density = (target: typeof canvas) =>
+    target.evaluate((element: HTMLCanvasElement, patch) => {
       const ratio = element.width / element.clientWidth;
       const data = element
         .getContext("2d")!
@@ -154,27 +175,29 @@ test("particles scatter around the cursor, return, and stop when motion is pause
     }, patch);
   const bounds = (await canvas.boundingBox())!;
   await page.mouse.move(bounds.x + patch.x, bounds.y + patch.y);
-  await expect
-    .poll(density, { timeout: 5000 })
-    .toBeLessThan(patch.density * 0.45);
-  const scatteredDensity = await density();
+  await advance(450);
+  expect(await density(canvas)).toBeLessThan((await density(controlCanvas)) * 0.45);
+  const scatteredDifference = difference(await signature(canvas), await signature(controlCanvas));
+  expect(scatteredDifference).toBeGreaterThan(0.08);
   await page.mouse.move(0, 0);
-  // Ambient motion can change the patch slightly; recovery still has to be clear.
-  await expect
-    .poll(density, { timeout: 7000 })
-    .toBeGreaterThan(Math.max(patch.density * 0.5, scatteredDensity * 2));
-  await page.getByRole("button", { name: "Pause animations" }).click();
+  // Let the spring settle and compare during a later part's hold, where a
+  // frame of initial scheduling variation cannot become a fast morph change.
+  await advance(4300);
+  await expect(canvas).toHaveAttribute("data-part", "Alloy wheel");
+  await expect(controlCanvas).toHaveAttribute("data-part", "Alloy wheel");
+  const recoveredDifference = difference(await signature(canvas), await signature(controlCanvas));
+  expect(recoveredDifference).toBeLessThan(0.07);
+  expect(recoveredDifference).toBeLessThan(scatteredDifference * 0.35);
+  await control.close();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
   const staticFrame = await canvas.evaluate((element: HTMLCanvasElement) =>
     element.toDataURL(),
   );
   await page.mouse.move(bounds.x + patch.x, bounds.y + patch.y);
-  // Wait over multiple frame opportunities without relying on renderer internals.
-  await page.evaluate(
-    () =>
-      new Promise<void>((resolve) =>
-        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
-      ),
-  );
+  // Run beyond another part transition while reduced motion keeps the exact
+  // rendered frame unchanged, including when the pointer enters the sculpture.
+  await page.clock.runFor(2200);
   expect(
     await canvas.evaluate((element: HTMLCanvasElement) => element.toDataURL()),
   ).toBe(staticFrame);

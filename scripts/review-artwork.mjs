@@ -9,12 +9,13 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, re
 await page.goto("http://127.0.0.1:5173/");
 await page.evaluate(() => document.fonts.ready);
 await page.locator("#rotor[data-ready=true]").waitFor();
-await page.screenshot({ path: "test-results/iamai-desktop.png", fullPage: true });
+await page.screenshot({ path: "test-results/iamai-desktop.png", fullPage: true, animations: "disabled" });
 await page.setViewportSize({ width: 390, height: 844 });
-await page.screenshot({ path: "test-results/iamai-mobile.png", fullPage: true });
+await page.screenshot({ path: "test-results/iamai-mobile.png", fullPage: true, animations: "disabled" });
 
 for (const [label, width, height] of [["desktop", 580, 520], ["mobile", 320, 300]]) {
-  await page.setViewportSize({ width: width * 4, height: (height + 52) * 2 });
+  // Initialize at the actual device width so mobile receives its own density.
+  await page.setViewportSize({ width: label === "mobile" ? width : 1440, height });
   const metrics = await page.evaluate(async ({ width, height }) => {
     const { ParticleRotor } = await import("/src/rotor.ts");
     document.body.innerHTML = "";

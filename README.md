@@ -30,7 +30,7 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 
 ## Three sections
 
-1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between eleven automotive parts every two seconds. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
+1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between seven reference-inspired automotive parts every two seconds, each surrounded by three to six particle-drawn sample prices in mixed currencies. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
 2. A large illustrative customer quote, the market context, and the question “How much more expensive are we?”. The “Check out our method” button dissolves into fine particles, which condense into an interactive four-step diagram. Select any step to explore its role. The explanation also covers advanced AI validation, exclusion of invalid offers, and five challenges under “Why is Crawling so difficult”.
 3. A contact form addressed to `info@iamaicrawler.com`.
 
@@ -40,7 +40,7 @@ The main wordmark opens with I, A and the left half of M, which stay unobstructe
 
 The header language selector offers DE, EN, IT and RU. All page copy, method details, metadata, accessible labels, form validation and submission messages follow the chosen language, which persists locally. English is the first-visit default. The English customer quote and market paragraphs are supplied marketing copy; the quote is visibly marked as illustrative.
 
-The site retains a persistent motion control, reduced-motion support, offscreen rendering suspension, responsive layouts and accessible focus states. Copy is grounded in the sibling `IAM_Crawler` repository; see [the design and research notes](docs/design-direction.md).
+The header contains navigation and the language selector. Motion follows the device's reduced-motion preference, with offscreen rendering suspension, responsive layouts and accessible focus states. Copy is grounded in the sibling `IAM_Crawler` repository; see [the design and research notes](docs/design-direction.md).
 
 ## Contact form setup
 
@@ -58,7 +58,7 @@ This command builds production files, then runs Playwright against the developme
 
 Playwright uses locally installed Google Chrome. Tests cover the three-section structure, exact hero copy and sequential reveal, mocked contact-form validation/success/retry, reduced motion, mobile navigation, viewport widths from 320px to 1920px, automated WCAG checks, deployment asset loading, identical screenshots across environments, and particle cursor scattering. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
 
-The experience tests also cover all four languages, language persistence, translated validation and form requests, the descending and rotating side mirror, its retained reflection and solid housing, interactive diagram keyboard controls, the finite particle transition and interruption by the motion control, and translated desktop/mobile layouts.
+The experience tests also cover all four languages, language persistence, translated validation and form requests, the descending and rotating side mirror, its retained reflection and solid housing, interactive diagram keyboard controls, the finite particle transition and interruption by a change to the device's reduced-motion preference, and translated desktop/mobile layouts.
 
 For visual review, start the local development server, then run:
 
@@ -66,7 +66,7 @@ For visual review, start the local development server, then run:
 node scripts/review-artwork.mjs
 ```
 
-This captures desktop and mobile page layouts plus contact sheets of all eleven sculptures at a fixed camera pose. The images are saved in `test-results/`, alongside per-part render timings printed to the terminal.
+This captures desktop and mobile page layouts plus contact sheets of all seven sculptures at a fixed camera pose. The images are saved in `test-results/`, alongside per-part render timings printed to the terminal.
 
 For the story, method and mirror reveal, run `node scripts/review-experience.mjs` against the development server. It captures the new layouts, translated method views and a five-frame logo sequence covering descent, landing, rotation and the final pose in `test-results/`.
 
@@ -74,4 +74,4 @@ For the story, method and mirror reveal, run `node scripts/review-experience.mjs
 
 The visual reference was [N2 Team](https://n2team.com/), interpreted through an independent layout and identity. The IAMAI wordmark uses original vector glyphs with mirrored ivory I/A pairs around a purple central M (`#b69af7`). The favicon uses the purple M framed by mirrored ivory I rails for legibility at small sizes.
 
-The original brake disc is preserved. The ten other sculptures use sampled 3D surfaces with realistic proportions, actual depth and mechanical cutouts: control arm, brake pads, steering wheel, radiator, V8 engine block, piston, brake caliper, headlight, muffler and bumper. The headlight has recessed projector optics, the muffler has a formed metal can and hollow exhaust pipes, and the bumper has a curved fascia with open intakes. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope's Latin and Cyrillic subsets are self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. The Cyrillic subset is the unmodified [Google Fonts Manrope v23 webfont](https://fonts.gstatic.com/s/manrope/v23/xn7gYHE41ni1AdIRggOxSuXd.woff2). Assets are served locally; only contact submissions use FormSubmit.
+The seven sculptures are inspired by the supplied part photos: an asymmetric cast control arm, flat-bottom sport steering wheel, split-spoke alloy rim, complete dual-pipe exhaust, performance brake caliper, elongated single-projector headlight and bare V8 engine block. They use sampled 3D surfaces with realistic depth, open sections and mechanical cutouts. The headlight follows the updated reference, with horizontal light guides and a rounded outer end. Prices vary by part, use realistic decimal amounts and morph between arrangements with the sculptures. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope's Latin and Cyrillic subsets are self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. The Cyrillic subset is the unmodified [Google Fonts Manrope v23 webfont](https://fonts.gstatic.com/s/manrope/v23/xn7gYHE41ni1AdIRggOxSuXd.woff2). Assets are served locally; only contact submissions use FormSubmit.

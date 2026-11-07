@@ -6,34 +6,20 @@ import { initI18n, t } from "./i18n";
 import { LogoReveal } from "./logo-reveal";
 
 const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-let storedMotion: string | null = null;
-try { storedMotion = localStorage.getItem("iam-motion"); } catch { /* Storage is optional. */ }
-let paused = motionQuery.matches || storedMotion === "paused";
-const motionButton = document.querySelector<HTMLButtonElement>(".motion-toggle")!;
+let paused = motionQuery.matches;
 const rotor = new ParticleRotor(document.querySelector<HTMLCanvasElement>("#rotor")!);
 const logoReveal = new LogoReveal(paused);
 const method = new MethodExperience(paused);
 initI18n();
 const textReveal = new ParticleTextReveal(document.querySelector<HTMLElement>(".hero-message")!, paused);
 
-function motionLabels() {
-  motionButton.setAttribute("aria-label", t(paused ? "motionPlay" : "motionPause"));
-  document.querySelector(".motion-label")!.textContent = t(paused ? "motionOff" : "motionOn");
-}
 function applyMotion() {
   document.documentElement.dataset.motion = paused ? "paused" : "playing";
-  motionButton.setAttribute("aria-pressed", String(paused));
-  motionLabels();
   rotor.setPaused(paused);
   textReveal.setPaused(paused);
   method.setPaused(paused);
   logoReveal.setPaused(paused);
 }
-motionButton.addEventListener("click", () => {
-  paused = !paused;
-  try { localStorage.setItem("iam-motion", paused ? "paused" : "playing"); } catch { /* Storage is optional. */ }
-  applyMotion();
-});
 motionQuery.addEventListener("change", (event) => { paused = event.matches; applyMotion(); });
 applyMotion();
 
@@ -196,7 +182,6 @@ form.addEventListener("submit", async (event) => {
   }
 });
 window.addEventListener("languagechange", () => {
-  motionLabels();
   menuLabel();
   fields.forEach(localizeValidity);
   renderFormState();

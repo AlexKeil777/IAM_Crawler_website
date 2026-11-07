@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("particle sculpture changes shape and continues after being paused", async ({ page }) => {
+test("particle sculpture follows live reduced-motion changes and resumes morphing", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("./");
   const canvas = page.locator("#rotor");
@@ -25,25 +25,28 @@ test("particle sculpture changes shape and continues after being paused", async 
   const difference = (a: number[], b: number[]) =>
     a.reduce((sum, value, i) => sum + Math.abs(value - b[i]), 0);
 
-  await page.getByRole("button", { name: "Pause animations" }).click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
   const first = await signature();
   await page.waitForTimeout(2200);
   expect(await signature()).toEqual(first);
 
-  await page.getByRole("button", { name: "Play animations" }).click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.waitForTimeout(2300);
-  await page.getByRole("button", { name: "Pause animations" }).click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
   const second = await signature();
   expect(difference(first, second)).toBeGreaterThan(0.2);
 
-  await page.getByRole("button", { name: "Play animations" }).click();
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.waitForTimeout(2300);
-  await page.getByRole("button", { name: "Pause animations" }).click();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
   const third = await signature();
   expect(difference(second, third)).toBeGreaterThan(0.2);
 });
 
-test("headlight, muffler and bumper render in the cycle before it returns to the disc", async ({ page }) => {
+test("all seven reference parts render in sequence and loop back to the control arm", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const start = new Date("2026-11-07T12:00:00Z");
   await page.clock.install({ time: start });
@@ -51,11 +54,23 @@ test("headlight, muffler and bumper render in the cycle before it returns to the
   await page.goto("./");
   const canvas = page.locator("#rotor");
   await expect(canvas).toHaveAttribute("data-ready", "true");
-  await expect(canvas).toHaveAttribute("data-part", "brake disc");
+  await expect(canvas).toHaveAttribute("data-part", "Control arm");
 
-  await page.clock.runFor(14_300);
-  for (const part of ["Headlight", "Muffler", "Front bumper"]) {
+  const priceCounts = new Set<number>();
+  const currencies = new Set<string>();
+  await page.clock.runFor(300);
+  for (const part of ["Control arm", "Steering wheel", "Alloy wheel", "Exhaust system", "Brake caliper", "Headlight", "V8 engine block"]) {
     await expect(canvas).toHaveAttribute("data-part", part);
+    const prices: string[] = JSON.parse((await canvas.getAttribute("data-prices"))!);
+    expect(prices.length).toBeGreaterThanOrEqual(3);
+    expect(prices.length).toBeLessThanOrEqual(6);
+    await expect(canvas).toHaveAttribute("data-price-count", String(prices.length));
+    priceCounts.add(prices.length);
+    for (const price of prices) {
+      expect(price).toMatch(/\d+[.,]\d{2}$/);
+      expect(price).not.toMatch(/[.,]00$/);
+      currencies.add(price.replace(/[\d\s.,']/g, ""));
+    }
     const visiblePixels = await canvas.evaluate((element: HTMLCanvasElement) => {
       const pixels = element.getContext("2d")!.getImageData(0, 0, element.width, element.height).data;
       let visible = 0;
@@ -66,6 +81,6 @@ test("headlight, muffler and bumper render in the cycle before it returns to the
     await page.clock.runFor(2000);
   }
   await expect(canvas).toHaveAttribute("data-part", "Control arm");
-  await page.clock.runFor(2000);
-  await expect(canvas).toHaveAttribute("data-part", "brake disc");
+  expect([...priceCounts].sort()).toEqual([3, 4, 5, 6]);
+  expect(currencies.size).toBeGreaterThanOrEqual(3);
 });

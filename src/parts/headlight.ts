@@ -1,112 +1,87 @@
 import { PartBuilder, type PartShape, type Vec3, type XY } from "../part-geometry";
 
-/** A detached swept headlamp, with open reflector bowls behind its front bezel. */
+const circle = (x: number, y: number, radius: number): XY[] =>
+  Array.from({ length: 32 }, (_, i) => [x + Math.cos(i * Math.PI / 16) * radius, y + Math.sin(i * Math.PI / 16) * radius]);
+
+/** Long single-projector lamp with a squared inner end and curved outer tip. */
 export function buildHeadlight(count: number): PartShape {
   const part = new PartBuilder(49157);
   const outline: XY[] = [
-    [-214, -48], [-195, -82], [-117, -96], [27, -88],
-    [197, -125], [217, -105], [191, -28], [151, 41],
-    [94, 66], [-136, 69], [-190, 48], [-212, 14],
+    [-211, 56], [-202, 29], [-199, -36], [-196, -61], [-183, -76],
+    [-158, -80], [108, -80], [143, -75], [171, -63], [193, -44],
+    [210, -21], [218, 1], [213, 24], [198, 43], [175, 57],
+    [143, 67], [94, 73], [-176, 75], [-199, 70],
   ];
-  const opening = outline.map(([x, y]): XY => [x * 0.945, y * 0.875]);
-  const rear = outline.map(([x, y]): XY => [x * 0.925, y * 0.9]);
+  const opening = outline.map(([x, y]): XY => [x * 0.947, y * 0.84]);
+  const rear = outline.map(([x, y]): XY => [x * 0.93, y * 0.91]);
 
-  // Keep the broad optical face readable while revealing the housing's depth.
-  part.group([0, 0, 0], [0.28, 0.32, 0.28], () => {
-    part.extrude(rear, 16, [0, 0, 67], 0.34);
-    part.extrude(outline, 9, [0, 0, -21], 0.73, [opening]);
-    outline.forEach(([x, y], index) => {
-      const next = (index + 1) % outline.length;
-      // The lens flange and rear moulding enclose a deep, empty optical cavity.
-      part.quad(
-        [x, y, -16.5],
-        [outline[next][0], outline[next][1], -16.5],
-        [rear[next][0], rear[next][1], 59],
-        [rear[index][0], rear[index][1], 59],
-        0.46,
-      );
-      const edgeLength = Math.hypot(outline[next][0] - x, outline[next][1] - y);
-      part.featureLine([x, y, -25.5], [outline[next][0], outline[next][1], -25.5],
-        Math.round(edgeLength * 0.53), 1.04);
+  // A mild local rotation shows the long face and the depth of the moulding.
+  part.group([0, 0, 0], [0.31, 0.37, 0.29], () => {
+    part.extrude(rear, 12, [0, 0, 51], 0.24);
+    part.extrude(outline, 8, [0, 0, -22], 0.66, [opening]);
+    outline.forEach(([x, y], i) => {
+      const next = (i + 1) % outline.length;
+      const [xx, yy] = outline[next];
+      part.quad([x, y, -18], [xx, yy, -18],
+        [rear[next][0], rear[next][1], 45], [rear[i][0], rear[i][1], 45], 0.4);
+      part.featureLine([x, y, -26], [xx, yy, -26], Math.round(Math.hypot(xx - x, yy - y) * 0.65), 1.06);
     });
 
-    const projector = (center: Vec3, radius: number, lensRadius: number, samples: number) => {
-      part.group(center, [0, 0, 0], () => {
-        // A deep black barrel supports the bright, concave reflector surface.
-        part.cylinder([0, 0, 4], radius + 4, 63, [0, 0, 1], radius, 0.39);
-        part.torus([0, 0, -28], radius + 1.2, 2.8, [0, 0, 1], 1.08);
-
-        const inner = lensRadius + 1;
-        const steps = 5;
-        const segments = 48;
-        const bowlPoint = (angle: number, r: number): Vec3 => [
-          Math.cos(angle) * r,
-          Math.sin(angle) * r,
-          17 - 44 * ((r * r - inner * inner) / (radius * radius - inner * inner)),
-        ];
-        for (let ring = 0; ring < steps; ring++) {
-          const r0 = inner + (radius - inner) * ring / steps;
-          const r1 = inner + (radius - inner) * (ring + 1) / steps;
-          for (let segment = 0; segment < segments; segment++) {
-            const a0 = segment * Math.PI * 2 / segments;
-            const a1 = (segment + 1) * Math.PI * 2 / segments;
-            part.quad(bowlPoint(a0, r0), bowlPoint(a1, r0),
-              bowlPoint(a1, r1), bowlPoint(a0, r1), 1.08);
-          }
-        }
-
-        // The curved projector lens is recessed within a separate metal collar.
-        part.ellipsoid([0, 0, 3], [lensRadius, lensRadius, 15], 0.86);
-        part.cylinder([0, 0, -8], lensRadius + 4, 8, [0, 0, 1], lensRadius - 1, 1.03);
-        part.featureCircle([0, 0, -28], radius + 1.2, [0, 0, 1], samples, 1.15);
-        part.featureCircle([0, 0, -12], lensRadius - 1, [0, 0, 1], samples - 40, 1.1);
-        // An adjustment boss remains behind the bowl instead of obscuring it.
-        part.cylinder([0, 0, 47], lensRadius + 4, 28, [0, 0, 1], 0, 0.37);
-      });
-    };
-    projector([-110, -5, 0], 53, 28, 220);
-    projector([24, -2, 3], 43, 24, 200);
-
-    // A solid LED lightguide follows the brow and sweeps up into the wing tip.
-    const brow: Vec3[] = [
-      [-194, -54, -32], [-164, -72, -35], [-60, -71, -36],
-      [34, -62, -35], [188, -108, -27],
+    // The continuous light guide runs straight across the top, around the
+    // rounded outside end, and back along the lower edge of the optical face.
+    const guide: Vec3[] = [
+      [-164, -42, -30], [-72, -43, -30], [51, -43, -30], [133, -42, -30],
+      [159, -34, -30], [181, -17, -30], [190, 1, -30], [184, 20, -30],
+      [166, 37, -30], [141, 45, -30], [65, 52, -30], [-173, 53, -30],
     ];
-    for (let index = 0; index < brow.length - 1; index++) {
-      const a = brow[index], b = brow[index + 1];
+    for (let i = 0; i < guide.length - 1; i++) {
+      const a = guide[i], b = guide[i + 1];
       const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
-      const nx = -(b[1] - a[1]) / length * 2.8;
-      const ny = (b[0] - a[0]) / length * 2.8;
+      const nx = -(b[1] - a[1]) / length * 2.1;
+      const ny = (b[0] - a[0]) / length * 2.1;
       part.quad([a[0] - nx, a[1] - ny, a[2]], [a[0] + nx, a[1] + ny, a[2]],
-        [b[0] + nx, b[1] + ny, b[2]], [b[0] - nx, b[1] - ny, b[2]], 1.15);
-      part.quad([a[0] - nx, a[1] - ny, a[2]], [b[0] - nx, b[1] - ny, b[2]],
-        [b[0] - nx, b[1] - ny, b[2] + 6], [a[0] - nx, a[1] - ny, a[2] + 6], 0.93);
-      part.featureLine(a, b, Math.round(length * 0.91), 1.2);
+        [b[0] + nx, b[1] + ny, b[2]], [b[0] - nx, b[1] - ny, b[2]], 1.25);
+      part.featureLine(a, b, Math.round(length * 1.45), 1.25);
     }
 
-    // A separate segmented reflector occupies the tapered indicator chamber.
-    part.extrude([[100, -23], [176, -62], [157, -6], [126, 31], [96, 34]],
-      12, [0, 0, -1], 0.64);
-    for (let i = 0; i < 5; i++) {
-      const x = 108 + i * 10;
-      const y = -18 - i * 5;
-      part.featureLine([x, y, -8], [x - 3, y + 41, -8], 24, 0.95);
+    // Separate narrow upper marker and lower-left indicator are recessed in
+    // the black surround rather than additional circular projector elements.
+    part.extrude([[-169, -67], [112, -67], [124, -60], [116, -52], [-170, -52]],
+      7, [0, 0, -13], 0.57);
+    part.featureLine([-169, -67, -17], [111, -67, -17], 200, 0.97);
+    const indicator: XY[] = [[-167, -10], [-45, -10], [-27, 1], [-18, 12], [-35, 22], [-170, 22]];
+    part.extrude(indicator, 11, [0, 0, -10], 0.82);
+    indicator.forEach(([x, y], i) => {
+      const b = indicator[(i + 1) % indicator.length];
+      part.featureLine([x, y, -16], [b[0], b[1], -16], Math.round(Math.hypot(b[0] - x, b[1] - y) * 0.8), 1.03);
+    });
+    for (let x = -160; x < -32; x += 8) {
+      part.featureLine([x, -7, -16.5], [x, 18, -16.5], 15, 0.92);
     }
 
-    // Slotted top ears and one lower bracket identify the detached assembly.
-    for (const [x, y, roll] of [[-156, -109, -0.06], [119, -125, -0.19]]) {
-      part.group([x, y, 24], [0, 0, roll], () => {
-        const hole: XY[] = Array.from({ length: 24 }, (_, i) => {
-          const a = i * Math.PI * 2 / 24;
-          return [Math.cos(a) * 6, Math.sin(a) * 6 - 3];
-        });
-        part.extrude([[-17, 15], [-15, -15], [13, -17], [18, 13]],
-          8, [0, 0, 0], 0.66, [hole]);
-        part.featureCircle([0, -3, -4], 6, [0, 0, 1], 60, 1.0);
-      });
+    // One large lens near the rounded end, with its own deep projector barrel.
+    part.group([89, 6, -1], [0, 0, 0], () => {
+      part.cylinder([0, 0, 9], 45, 58, [0, 0, 1], 39, 0.42);
+      part.cylinder([0, 0, -20], 46, 5, [0, 0, 1], 39, 0.9);
+      part.torus([0, 0, -24], 42.5, 2.2, [0, 0, 1], 1.07);
+      part.ellipsoid([0, 0, 4], [35, 35, 16], 0.44);
+      part.featureCircle([0, 0, -24], 43, [0, 0, 1], 240, 1.12);
+      part.featureCircle([0, 0, -17], 36, [0, 0, 1], 190, 0.92);
+      // A small off-axis reflection gives the lens curvature without a halo.
+      part.torus([-8, -8, -10], 13, 1.2, [0, 0, 1], 0.75, 0.2, 2.3);
+    });
+    part.extrude([[133, -17], [166, -12], [178, 2], [164, 16], [137, 20]],
+      8, [0, 0, 3], 0.43);
+
+    // A detached service part retains the mounting tabs above and below it.
+    for (const x of [-107, 121]) {
+      part.extrude([[-19, 8], [-17, -23], [10, -23], [22, -9], [20, 8]],
+        8, [x, -82, 25], 0.68, [circle(0, -10, 5)]);
+      part.featureCircle([x, -92, 20.5], 5, [0, 0, 1], 55, 1.02);
     }
-    part.box([-87, 78, 36], [33, 23, 13], 0.51);
-    part.box([46, 15, 89], [44, 36, 29], 0.36);
+    part.box([-113, 84, 19], [43, 17, 26], 0.46);
+    part.box([114, 76, 24], [31, 17, 25], 0.46);
+    part.box([-25, 28, 75], [75, 45, 35], 0.28);
   });
   return part.finish("Headlight", count);
 }

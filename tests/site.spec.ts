@@ -238,21 +238,25 @@ test("a failed contact submission preserves the message and allows retry", async
   expect(attempts).toBe(2);
 });
 
-test("motion respects reduced preference and the pause control persists", async ({
+test("motion follows the device preference without a header control or stored override", async ({
   page,
 }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => localStorage.setItem("iam-motion", "paused"));
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("./");
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "playing");
+  await expect(page.locator(".site-header .motion-toggle")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /(?:play|pause) animations/i })).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator(".automotive-background")).toHaveCount(0);
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
-  await expect(
-    page.getByRole("button", { name: "Play animations" }),
-  ).toBeVisible();
   await expect(page.locator("h1")).toHaveCSS("opacity", "1");
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await page.getByRole("button", { name: "Pause animations" }).click();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "playing");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-motion", "playing");
 });
 
 test("mobile navigation and layouts work without horizontal overflow", async ({
