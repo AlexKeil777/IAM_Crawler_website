@@ -1,7 +1,10 @@
 ﻿import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const endpoint = "https://formsubmit.co/ajax/info@iamaicrawler.com";
+const endpoint = "https://formsubmit.co/ajax/info@iamaicrawl.com";
+const unavailableStatus = "The contact service is temporarily unavailable. Your message is still in the form. Please try again later.";
+const unconfirmedStatus = "Delivery could not be confirmed. Your message is still in the form. Please try again.";
+const rejectedStatus = "Message could not be sent. Your message is still in the form. Please try again.";
 
 // Never send real contact emails during automated browser checks.
 test.beforeEach(async ({ page }) => {
@@ -52,13 +55,13 @@ test("the page has three focused sections and the requested hero copy", async ({
   await expect(page.locator("#method-view")).toBeHidden();
   await expect(page.locator("#explanation")).toHaveAttribute("data-view", "story");
   await expect(page.locator("#explanation table")).toHaveCount(0);
-  await expect(page.locator(".email-link")).toHaveText("info@iamaicrawler.com");
-  await expect(page.locator(".email-link")).toHaveAttribute(
-    "href", "mailto:info@iamaicrawler.com",
-  );
+  await expect(page.locator("body")).not.toContainText("info@iamaicrawl.com");
+  await expect(page.locator("body")).not.toContainText("info@iamaicrawler.com");
+  await expect(page.locator(".email-link")).toHaveCount(0);
+  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
   await expect(page.locator("#contact-form")).toHaveAttribute(
     "action",
-    "https://formsubmit.co/info@iamaicrawler.com",
+    "https://formsubmit.co/info@iamaicrawl.com",
   );
   await expect(page.locator("#contact-form")).toHaveAttribute(
     "method",
@@ -184,6 +187,8 @@ test("contact form sends to the intended endpoint and confirms success", async (
   await expect(page.locator("#contact-status")).toHaveText("Message sent!");
   expect(payload).toContain("Market analyst");
   expect(payload).toContain("analyst@example.com");
+  const source = new URL(page.url());
+  expect(JSON.parse(payload)._url).toBe(`${source.origin}${source.pathname}`);
   await expect(page.locator('#contact-form [name="name"]')).toHaveValue("");
   await expect(page.locator('#contact-form [name="email"]')).toHaveValue("");
   await expect(page.locator('#contact-form [name="message"]')).toHaveValue("");
@@ -217,7 +222,7 @@ test("a failed contact submission preserves the message and allows retry", async
   await page.route(endpoint, (route) => {
     attempts++;
     return route.fulfill({
-      status: attempts === 1 ? 500 : 200,
+      status: attempts === 1 ? 400 : 200,
       contentType: "application/json",
       body: JSON.stringify({ success: attempts === 1 ? "false" : "true" }),
     });
@@ -227,7 +232,7 @@ test("a failed contact submission preserves the message and allows retry", async
   const submit = page.locator('#contact-form button[type="submit"]');
   await submit.click();
   await expect(page.locator("#contact-status")).toHaveText(
-    "Message could not be sent. Please try again or email us directly.",
+    rejectedStatus,
   );
   await expect(page.locator('#contact-form [name="message"]')).toHaveValue(
     "I would like to discuss aftermarket coverage in Germany.",
@@ -236,6 +241,93 @@ test("a failed contact submission preserves the message and allows retry", async
   await submit.click();
   await expect(page.locator("#contact-status")).toHaveText("Message sent!");
   expect(attempts).toBe(2);
+});
+
+test("a FormSubmit 522 outage preserves the complete message without an automatic resend", async ({ page }) => {
+  let attempts = 0;
+  let sourceUrl = "";
+  await page.route(endpoint, (route) => {
+    attempts++;
+    sourceUrl = route.request().postDataJSON()._url;
+    return route.fulfill({ status: 522, contentType: "text/html", body: "<h1>Connection timed out</h1>" });
+  });
+  await page.goto("./?campaign=contact#contact");
+  await fillContact(page);
+  const name = "Müller & Partners";
+  const company = "R&D + Europe";
+  const message = "Please compare A&B = 20% cheaper.\nDetails: https://example.com/part?a=1&b=2\nПривет";
+  await page.locator("#contact-name").fill(name);
+  await page.locator("#contact-company").fill(company);
+  await page.locator("#contact-message").fill(message);
+  await page.locator('#contact-form button[type="submit"]').click();
+  await expect(page.locator("#contact-status")).toHaveText(unavailableStatus);
+  await expect(page.locator("#contact-name")).toHaveValue(name);
+  await expect(page.locator("#contact-company")).toHaveValue(company);
+  await expect(page.locator("#contact-message")).toHaveValue(message);
+  await expect(page.locator('#contact-form button[type="submit"]')).toBeEnabled();
+  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+  const source = new URL(page.url());
+  expect(sourceUrl).toBe(`${source.origin}${source.pathname}`);
+  expect(attempts).toBe(1);
+});
+
+test("a network failure leaves delivery unconfirmed without retrying automatically", async ({ page }) => {
+  let attempts = 0;
+  await page.route(endpoint, (route) => { attempts++; return route.abort("failed"); });
+  await page.goto("./");
+  await fillContact(page);
+  await page.locator('#contact-form button[type="submit"]').click();
+  await expect(page.locator("#contact-status")).toHaveText(unconfirmedStatus);
+  await expect(page.locator("#contact-message")).toHaveValue("I would like to discuss aftermarket coverage in Germany.");
+  await expect(page.locator('#contact-form button[type="submit"]')).toBeEnabled();
+  expect(attempts).toBe(1);
+});
+
+test("a stalled contact request times out while preserving the message", async ({ page }) => {
+  await page.clock.install();
+  let attempts = 0;
+  await page.route(endpoint, () => { attempts++; });
+  await page.goto("./");
+  await fillContact(page);
+  const submit = page.locator('#contact-form button[type="submit"]');
+  await submit.click();
+  await expect(submit).toBeDisabled();
+  await page.clock.fastForward(20001);
+  await expect(page.locator("#contact-status")).toHaveText(unconfirmedStatus);
+  await expect(submit).toBeEnabled();
+  await expect(page.locator("#contact-message")).toHaveValue("I would like to discuss aftermarket coverage in Germany.");
+  expect(attempts).toBe(1);
+});
+
+test("a non-JSON success response does not discard an undelivered contact message", async ({ page }) => {
+  await page.route(endpoint, (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<h1>Temporarily unavailable</h1>" }));
+  await page.goto("./");
+  await fillContact(page);
+  await page.locator('#contact-form button[type="submit"]').click();
+  await expect(page.locator("#contact-status")).toHaveText(unavailableStatus);
+  await expect(page.locator("#contact-message")).toHaveValue("I would like to discuss aftermarket coverage in Germany.");
+});
+
+for (const result of [{ success: "false" }, { message: "No success confirmation" }]) {
+  test(`an unconfirmed FormSubmit result ${JSON.stringify(result)} never reports success`, async ({ page }) => {
+    await page.route(endpoint, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(result) }));
+    await page.goto("./");
+    await fillContact(page);
+    await page.locator('#contact-form button[type="submit"]').click();
+    await expect(page.locator("#contact-status")).toHaveText(rejectedStatus);
+    await expect(page.locator("#contact-message")).toHaveValue("I would like to discuss aftermarket coverage in Germany.");
+  });
+}
+
+test("the honeypot blocks contact delivery", async ({ page }) => {
+  let attempts = 0;
+  await page.route(endpoint, (route) => { attempts++; return route.abort(); });
+  await page.goto("./");
+  await fillContact(page);
+  await page.locator('#contact-form [name="_honey"]').evaluate((field: HTMLInputElement) => { field.value = "spam"; });
+  await page.locator('#contact-form button[type="submit"]').click();
+  await expect(page.locator("#contact-status")).toHaveText(rejectedStatus);
+  expect(attempts).toBe(0);
 });
 
 test("motion follows the device preference without a header control or stored override", async ({

@@ -32,7 +32,7 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 
 1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between seven reference-inspired automotive parts every two seconds, each surrounded by three to six particle-drawn sample prices in mixed currencies. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
 2. A large illustrative customer quote, the market context, and the question “How much more expensive are we?”. The “Check out our method” button dissolves into fine particles, which condense into an interactive four-step diagram. Select any step to explore its role. The explanation also covers advanced AI validation, exclusion of invalid offers, and five challenges under “Why is Crawling so difficult”.
-3. A contact form addressed to `info@iamaicrawler.com`.
+3. A contact form addressed to `info@iamaicrawl.com`, without a displayed email address or `mailto:` link.
 
 The hero uses two columns on desktop and stacks the logo, sculpture and text on smaller screens. The floating background figures have been removed. Purple accents are shared by the wordmark, particles, links, focus indicators and contact button.
 
@@ -44,9 +44,11 @@ The header contains navigation and the language selector. Motion follows the dev
 
 ## Contact form setup
 
-The native form posts to `https://formsubmit.co/info@iamaicrawler.com`; JavaScript derives the matching `/ajax/` endpoint to keep visitors on the page. Required fields are name, email and message; company is optional. The form prevents duplicate submissions, uses a honeypot, times out stalled requests, preserves failed messages and allows retries. The enquiry subject and user-facing validation and status messages are translated.
+The native form posts to `https://formsubmit.co/info@iamaicrawl.com`; JavaScript derives the matching `/ajax/` endpoint to keep visitors on the page. The former recipient used the nonexistent `iamaicrawler.com` domain. Required fields are name, email and message; company is optional. Requests include `_url` with the source page's origin and path, without query parameters or fragments. The form prevents duplicate submissions, uses a honeypot, times out stalled requests, preserves failed messages and allows manual retries. Service outages (including HTTP 522 and non-JSON responses) and unconfirmed delivery after a network failure or timeout have distinct messages. Only an explicit successful response clears the form. The enquiry subject and user-facing validation and status messages are translated.
 
-FormSubmit requires activating the form again after changing the recipient. The first genuine submission triggers an activation email to `info@iamaicrawler.com`; follow its confirmation link. This is a recipient action, not a website deployment step. Automated tests intercept form requests and do not send real emails. See the [FormSubmit recipient-change instructions](https://formsubmit.co/help).
+FormSubmit requires activating the form again after changing the recipient. The first genuine submission triggers an activation email to `info@iamaicrawl.com`; follow its confirmation link. This is a recipient action, not a website deployment step. Automated tests intercept form requests and do not send real emails. See the [FormSubmit recipient-change instructions](https://formsubmit.co/help). FormSubmit returned HTTP 522 during investigation on 7 November 2026; changing client code cannot restore an unavailable provider.
+
+The displayed email address and email links are removed. To also hide the recipient from the HTML form action, replace `info@iamaicrawl.com` there with the random endpoint identifier supplied in FormSubmit's activation email. The existing AJAX derivation supports either identifier. Do not replace it with an invented identifier: it must be issued by FormSubmit. See [Invisible emails](https://formsubmit.co/documentation).
 
 ## Verification
 

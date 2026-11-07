@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const endpoint = "https://formsubmit.co/ajax/info@iamaicrawler.com";
+const endpoint = "https://formsubmit.co/ajax/info@iamaicrawl.com";
 
 const translations = {
   de: {
@@ -12,7 +12,7 @@ const translations = {
     menu: "Navigation öffnen", subject: "Anfrage über die IAMAI-Website",
     required: "Bitte füllen Sie dieses Feld aus.", invalidEmail: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
     success: "Nachricht gesendet.",
-    failure: "Die Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder schreiben Sie uns direkt eine E-Mail.",
+    failure: "Die Nachricht konnte nicht gesendet werden. Ihre Nachricht steht weiterhin im Formular. Bitte versuchen Sie es erneut.",
   },
   en: {
     title: "IAMAI — Intelligent IAM crawling", hero: "Crawl efficiently",
@@ -22,7 +22,7 @@ const translations = {
     menu: "Open navigation", subject: "IAMAI website enquiry",
     required: "Please complete this field.", invalidEmail: "Please enter a valid email address.",
     success: "Message sent!",
-    failure: "Message could not be sent. Please try again or email us directly.",
+    failure: "Message could not be sent. Your message is still in the form. Please try again.",
   },
   it: {
     title: "IAMAI — Crawling intelligente per l'IAM", hero: "Esplora con efficienza",
@@ -32,7 +32,7 @@ const translations = {
     menu: "Apri il menu di navigazione", subject: "Richiesta dal sito IAMAI",
     required: "Compila questo campo.", invalidEmail: "Inserisci un indirizzo email valido.",
     success: "Messaggio inviato.",
-    failure: "Impossibile inviare il messaggio. Riprova oppure scrivici direttamente via email.",
+    failure: "Impossibile inviare il messaggio. Il messaggio è ancora nel modulo. Riprova.",
   },
   ru: {
     title: "IAMAI — Интеллектуальный сбор данных об IAM", hero: "Собирайте эффективно",
@@ -42,7 +42,7 @@ const translations = {
     menu: "Открыть меню навигации", subject: "Обращение с сайта IAMAI",
     required: "Заполните это поле.", invalidEmail: "Введите корректный адрес электронной почты.",
     success: "Сообщение отправлено.",
-    failure: "Не удалось отправить сообщение. Попробуйте ещё раз или напишите нам напрямую по электронной почте.",
+    failure: "Не удалось отправить сообщение. Ваше сообщение осталось в форме. Попробуйте ещё раз.",
   },
 } as const;
 
@@ -238,7 +238,7 @@ for (const language of ["de", "en", "it", "ru"] as const) {
       attempts++;
       payload = route.request().postDataJSON();
       await route.fulfill({
-        status: attempts === 1 ? 500 : 200,
+        status: attempts === 1 ? 400 : 200,
         contentType: "application/json",
         body: JSON.stringify({ success: attempts !== 1 }),
       });

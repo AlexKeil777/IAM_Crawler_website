@@ -77,7 +77,8 @@ const submitLabel = submit.querySelector<HTMLElement>(".submit-label")!;
 const status = document.querySelector<HTMLElement>("#contact-status")!;
 const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[required], textarea[required]")];
 let sending = false;
-let statusKey: "sentStatus" | "errorStatus" | "validationRequired" | "validationEmail" | "sendingLabel" | null = null;
+type SubmissionFailure = "errorStatus" | "unavailableStatus" | "deliveryUnknownStatus";
+let statusKey: "sentStatus" | SubmissionFailure | "validationRequired" | "validationEmail" | "sendingLabel" | null = null;
 let statusTimeout: number | undefined;
 // Validate current values in the submit handler, including browser autofill.
 form.noValidate = true;
@@ -143,6 +144,8 @@ form.addEventListener("submit", async (event) => {
     renderFormState();
     return;
   }
+  // Identify the page even when cross-origin referrers omit its path.
+  data.set("_url", `${window.location.origin}${window.location.pathname}`);
   window.clearTimeout(statusTimeout);
   sending = true;
   submit.disabled = true;
@@ -151,6 +154,9 @@ form.addEventListener("submit", async (event) => {
   renderFormState();
   const controller = new AbortController();
   const timeout = window.setTimeout(() => controller.abort(), 20000);
+  // A lost response does not tell us whether the service accepted the message.
+  // Keep the visitor's text and let them choose whether to retry.
+  let failureKey: SubmissionFailure = "deliveryUnknownStatus";
   try {
     const endpoint = form.action.replace("https://formsubmit.co/", "https://formsubmit.co/ajax/");
     const response = await fetch(endpoint, {
@@ -159,8 +165,13 @@ form.addEventListener("submit", async (event) => {
       body: JSON.stringify(Object.fromEntries(data.entries())),
       signal: controller.signal,
     });
+    failureKey = response.status >= 500 ? "unavailableStatus" : "errorStatus";
+    if (!response.ok) throw new Error(`Contact service returned HTTP ${response.status}`);
+    // Outages can return HTML or plain text instead of the expected JSON.
+    failureKey = "unavailableStatus";
     const result = await response.json();
-    if (!response.ok || ![true, "true"].includes(result.success)) throw new Error("Submission failed");
+    failureKey = "errorStatus";
+    if (!result || ![true, "true"].includes(result.success)) throw new Error("Submission failed");
     evaporateText(form.querySelector<HTMLTextAreaElement>("#contact-message")!);
     form.reset();
     fields.forEach((field) => field.setCustomValidity(""));
@@ -172,7 +183,7 @@ form.addEventListener("submit", async (event) => {
       renderFormState();
     }, 1000);
   } catch {
-    statusKey = "errorStatus";
+    statusKey = controller.signal.aborted ? "deliveryUnknownStatus" : failureKey;
     status.className = "error";
   } finally {
     window.clearTimeout(timeout);
