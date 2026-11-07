@@ -1,4 +1,6 @@
-/** A code-drawn brake rotor. No video, external image requests or WebGL dependency. */
+/** A code-drawn particle sculpture. No external images or WebGL dependency. */
+import { createPartShapes, type PartShape } from "./part-shapes";
+
 type Particle = {
   x: number;
   y: number;
@@ -20,6 +22,8 @@ export class ParticleRotor {
   private frame = 0;
   private last = 0;
   private time = 0;
+  private morphTime = 0;
+  private shapes: PartShape[] = [];
   private paused = true;
   private visible = true;
   private pointer = { x: 0, y: 0 };
@@ -29,6 +33,12 @@ export class ParticleRotor {
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d", { alpha: true });
     this.makeParticles();
+    const otherShapes = createPartShapes(this.particles.length);
+    this.shapes = [
+      { name: "brake disc", points: this.particles.map(({ x, y, z }) => ({ x, y, z })) },
+      ...otherShapes.slice(1),
+      otherShapes[0],
+    ];
     new ResizeObserver(() => this.resize()).observe(canvas);
     new IntersectionObserver(
       (entries) => {
@@ -169,6 +179,7 @@ export class ParticleRotor {
         ? Math.min((timestamp - this.last) / 1000, 0.1)
         : 0.033;
       this.time += delta;
+      this.morphTime += delta;
       this.last = timestamp;
       this.pointer.x += (this.pointerTarget.x - this.pointer.x) * 0.035;
       this.pointer.y += (this.pointerTarget.y - this.pointer.y) * 0.035;
@@ -182,10 +193,21 @@ export class ParticleRotor {
     if (!ctx || !this.width || !this.height) return;
     ctx.clearRect(0, 0, this.width, this.height);
     const t = this.time;
+    // Hold each component long enough to read it, then move the same particles
+    // into the next one. The last component transitions back into the disc.
+    const hold = 1.25;
+    const transition = 0.75;
+    const cycle = hold + transition;
+    const shapeIndex = Math.floor(this.morphTime / cycle) % this.shapes.length;
+    const nextIndex = (shapeIndex + 1) % this.shapes.length;
+    const progress = Math.max(0, Math.min(1, (this.morphTime % cycle - hold) / transition));
+    const blend = progress * progress * (3 - 2 * progress);
+    const from = this.shapes[shapeIndex].points;
+    const to = this.shapes[nextIndex].points;
     const scale = Math.min(this.width / 590, this.height / 520) * 0.95;
     const yaw = -0.55 + Math.sin(t * 0.12) * 0.14 + this.pointer.x * 0.15;
     const tilt = -0.4 + this.pointer.y * 0.13;
-    const turn = -0.34 + t * 0.025;
+    const turn = -0.34 + Math.sin(t * 0.12) * 0.06;
     const cy = Math.cos(yaw),
       sy = Math.sin(yaw),
       cx = Math.cos(tilt),
@@ -196,10 +218,13 @@ export class ParticleRotor {
     const centerY = this.height * 0.51;
     const radius = Math.max(55, Math.min(100, this.width * 0.17));
     const damping = Math.exp(-5.5 * delta);
-    for (const p of this.particles) {
-      let px = p.x * cz - p.y * sz;
-      let py = p.x * sz + p.y * cz;
-      let pz = p.z;
+    for (let i = 0; i < this.particles.length; i++) {
+      const p = this.particles[i];
+      const x = from[i].x + (to[i].x - from[i].x) * blend;
+      const y = from[i].y + (to[i].y - from[i].y) * blend;
+      let px = x * cz - y * sz;
+      let py = x * sz + y * cz;
+      let pz = from[i].z + (to[i].z - from[i].z) * blend;
       const rotatedX = px * cy + pz * sy;
       pz = -px * sy + pz * cy;
       px = rotatedX;
@@ -232,7 +257,7 @@ export class ParticleRotor {
             forceY = (Math.sin(angle) + Math.cos(angle) * swirl) * force;
           }
         }
-        // A damped spring brings each particle back to its moving disc position.
+        // A damped spring brings each particle back to its moving position.
         p.velocityX =
           (p.velocityX + (forceX - p.offsetX * 12) * delta) * damping;
         p.velocityY =
@@ -240,8 +265,8 @@ export class ParticleRotor {
         p.offsetX += p.velocityX * delta;
         p.offsetY += p.velocityY * delta;
       }
-      const x = baseX + p.offsetX;
-      const y = baseY + p.offsetY;
+      const screenX = baseX + p.offsetX;
+      const screenY = baseY + p.offsetY;
       const depth = Math.max(0.28, Math.min(0.98, 0.68 + pz / 450));
       const alpha = depth * (1 - dissolve) * (0.7 + p.seed * 0.3);
       ctx.fillStyle =
@@ -249,7 +274,7 @@ export class ParticleRotor {
           ? `rgba(182,154,247,${alpha * 0.95})`
           : `rgba(234,235,220,${alpha})`;
       const size = Math.max(0.45, p.size * scale * perspective * 1.15);
-      ctx.fillRect(x, y, size, size);
+      ctx.fillRect(screenX, screenY, size, size);
     }
     // Sparse motes slowly travel away from the component and evaporate.
     for (let i = 0; i < 43; i++) {
