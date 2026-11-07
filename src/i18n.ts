@@ -70,7 +70,7 @@ const en = {
   messageLabel: "Message",
   submitLabel: "Send message",
   sendingLabel: "Sending…",
-  sentStatus: "Message sent.",
+  sentStatus: "Message sent!",
   errorStatus: "Message could not be sent. Please try again or email us directly.",
   formService: "Sent using",
   backTop: "Back to top",

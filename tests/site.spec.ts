@@ -178,13 +178,14 @@ test("contact form sends to the intended endpoint and confirms success", async (
   await submit.click();
   await expect(submit).toBeDisabled();
   release();
-  await expect(page.locator("#contact-status")).toHaveText("Message sent.");
+  await expect(page.locator("#contact-status")).toHaveText("Message sent!");
   expect(payload).toContain("Market analyst");
   expect(payload).toContain("analyst@example.com");
   await expect(page.locator('#contact-form [name="name"]')).toHaveValue("");
   await expect(page.locator('#contact-form [name="email"]')).toHaveValue("");
   await expect(page.locator('#contact-form [name="message"]')).toHaveValue("");
   await expect(submit).toBeEnabled();
+  await expect(page.locator("#contact-status")).toHaveText("", { timeout: 2000 });
 });
 
 test("a failed contact submission preserves the message and allows retry", async ({
@@ -211,7 +212,7 @@ test("a failed contact submission preserves the message and allows retry", async
   );
   await expect(submit).toBeEnabled();
   await submit.click();
-  await expect(page.locator("#contact-status")).toHaveText("Message sent.");
+  await expect(page.locator("#contact-status")).toHaveText("Message sent!");
   expect(attempts).toBe(2);
 });
 

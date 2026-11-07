@@ -21,7 +21,7 @@ const translations = {
     contact: "Contact", message: "Message", language: "Language", play: "Play animations",
     menu: "Open navigation", subject: "IAMAI website enquiry",
     required: "Please complete this field.", invalidEmail: "Please enter a valid email address.",
-    success: "Message sent.",
+    success: "Message sent!",
     failure: "Message could not be sent. Please try again or email us directly.",
   },
   it: {

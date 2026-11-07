@@ -92,6 +92,7 @@ const status = document.querySelector<HTMLElement>("#contact-status")!;
 const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[required], textarea[required]")];
 let sending = false;
 let statusKey: "sentStatus" | "errorStatus" | null = null;
+let statusTimeout: number | undefined;
 
 function localizeValidity(field: HTMLInputElement | HTMLTextAreaElement) {
   field.setCustomValidity("");
@@ -111,6 +112,7 @@ form.addEventListener("submit", async (event) => {
   if (sending || !form.reportValidity()) return;
   const data = new FormData(form);
   if (data.get("_honey")) return;
+  window.clearTimeout(statusTimeout);
   sending = true;
   submit.disabled = true;
   statusKey = null;
@@ -132,6 +134,10 @@ form.addEventListener("submit", async (event) => {
     fields.forEach((field) => field.setCustomValidity(""));
     statusKey = "sentStatus";
     status.className = "success";
+    statusTimeout = window.setTimeout(() => {
+      statusKey = null;
+      renderFormState();
+    }, 1000);
   } catch {
     statusKey = "errorStatus";
     status.className = "error";
