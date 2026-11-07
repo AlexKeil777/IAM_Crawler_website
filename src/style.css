@@ -160,8 +160,8 @@ p { color: var(--muted); }
   letter-spacing: -0.05em;
   text-wrap: pretty;
 }
-.customer-quote blockquote p::before { content: "“"; color: var(--accent); }
-.customer-quote blockquote p::after { content: "”"; color: var(--accent); }
+.customer-quote blockquote p::before { content: '"'; color: var(--accent); }
+.customer-quote blockquote p::after { content: '"'; color: var(--accent); }
 .customer-quote figcaption { margin-top: 25px; color: var(--muted); font-size: 12px; }
 .story-context, .story-promise { max-width: 800px; margin-left: auto; }
 .story-context { margin-top: 53px; font-size: 16px; line-height: 1.95; }
