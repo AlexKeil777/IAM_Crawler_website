@@ -29,6 +29,11 @@ export class ParticleRotor {
   private pointer = { x: 0, y: 0 };
   private pointerTarget = { x: 0, y: 0 };
   private cursor = { x: 0, y: 0, active: false };
+  // Reused projection buffers keep surface lighting and hidden-surface removal
+  // inexpensive without introducing WebGL or a graphics dependency.
+  private projected = new Float32Array(0);
+  private depthBuffer = new Float32Array(0);
+  private depthWidth = 0;
 
   constructor(private canvas: HTMLCanvasElement) {
     this.ctx = canvas.getContext("2d", { alpha: true });
@@ -39,6 +44,7 @@ export class ParticleRotor {
       ...otherShapes.slice(1),
       otherShapes[0],
     ];
+    this.projected = new Float32Array(this.particles.length * 7);
     new ResizeObserver(() => this.resize()).observe(canvas);
     new IntersectionObserver(
       (entries) => {
@@ -145,6 +151,8 @@ export class ParticleRotor {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.round(rect.width * dpr);
     this.canvas.height = Math.round(rect.height * dpr);
+    this.depthWidth = Math.ceil(rect.width / 3);
+    this.depthBuffer = new Float32Array(this.depthWidth * Math.ceil(rect.height / 3));
     this.ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.draw();
     if (this.ctx && this.width > 0 && this.height > 0)
@@ -204,6 +212,15 @@ export class ParticleRotor {
     const blend = progress * progress * (3 - 2 * progress);
     const from = this.shapes[shapeIndex].points;
     const to = this.shapes[nextIndex].points;
+    this.canvas.dataset.part = this.shapes[shapeIndex].name;
+    const surfaceBlend = (from[0].nz === undefined ? 0 : 1) * (1 - blend)
+      + (to[0].nz === undefined ? 0 : 1) * blend;
+    // Gradually loosen the surface during morphs and re-form it at the end.
+    // This avoids hidden particles popping into view at the transition edges.
+    // The original brake disc retains its original rendering.
+    const occlusionWeight = surfaceBlend * Math.cos(Math.PI * blend) ** 2;
+    const occlude = occlusionWeight > 0.001;
+    if (occlude) this.depthBuffer.fill(Infinity);
     const scale = Math.min(this.width / 590, this.height / 520) * 0.95;
     const yaw = -0.55 + Math.sin(t * 0.12) * 0.14 + this.pointer.x * 0.15;
     const tilt = -0.4 + this.pointer.y * 0.13;
@@ -267,14 +284,58 @@ export class ParticleRotor {
       }
       const screenX = baseX + p.offsetX;
       const screenY = baseY + p.offsetY;
+      let shading = 1;
+      if (surfaceBlend > 0) {
+        // Transform surface normals with the same rigid camera transform.
+        const nx = (from[i].nx ?? 0) * (1 - blend) + (to[i].nx ?? 0) * blend;
+        const ny = (from[i].ny ?? 0) * (1 - blend) + (to[i].ny ?? 0) * blend;
+        const nz = (from[i].nz ?? -1) * (1 - blend) + (to[i].nz ?? -1) * blend;
+        const rx = nx * cz - ny * sz, ry = nx * sz + ny * cz;
+        const xx = rx * cy + nz * sy, zz = -rx * sy + nz * cy;
+        const yy = ry * cx - zz * sx, normalZ = ry * sx + zz * cx;
+        const diffuse = Math.max(0, -xx * 0.3 - yy * 0.45 - normalZ * 0.84);
+        const tone = (from[i].tone ?? 1) * (1 - blend) + (to[i].tone ?? 1) * blend;
+        const lit = Math.min(1.3, (0.5 + diffuse * 0.8) * tone);
+        shading = 1 + (lit - 1) * surfaceBlend;
+        const feature = (from[i].edge ?? 0) * (1 - blend) + (to[i].edge ?? 0) * blend;
+        if (feature > 0.9) shading = Math.max(shading, 0.85);
+        if (occlude && normalZ > 0.12 && dissolve === 0 && feature < 0.9)
+          shading *= 1 - occlusionWeight;
+      }
       const depth = Math.max(0.28, Math.min(0.98, 0.68 + pz / 450));
-      const alpha = depth * (1 - dissolve) * (0.7 + p.seed * 0.3);
-      ctx.fillStyle =
-        p.accent || escaping
-          ? `rgba(182,154,247,${alpha * 0.95})`
-          : `rgba(234,235,220,${alpha})`;
-      const size = Math.max(0.45, p.size * scale * perspective * 1.15);
-      ctx.fillRect(screenX, screenY, size, size);
+      const surfaceDepth = Math.max(0.65, Math.min(1, 0.86 - pz / 1800));
+      const edge = (from[i].edge ?? 0) * (1 - blend) + (to[i].edge ?? 0) * blend;
+      const alpha = Math.min(1, (depth + (surfaceDepth - depth) * surfaceBlend)
+        * shading * (1 - dissolve) * (0.7 + p.seed * 0.3) * (1 + edge * 0.28));
+      const size = Math.max(0.45 + surfaceBlend * 0.15,
+        p.size * scale * perspective * (1.15 + surfaceBlend * 0.18));
+      const offset = i * 7;
+      this.projected[offset] = screenX;
+      this.projected[offset + 1] = screenY;
+      this.projected[offset + 2] = pz;
+      this.projected[offset + 3] = alpha;
+      this.projected[offset + 4] = size;
+      this.projected[offset + 5] = p.accent || escaping ? 1 : 0;
+      const cellX = Math.floor(screenX / 3), cellY = Math.floor(screenY / 3);
+      const cell = cellY * this.depthWidth + cellX;
+      const inside = cellX >= 0 && cellX < this.depthWidth && cellY >= 0 && cell < this.depthBuffer.length;
+      this.projected[offset + 6] = inside && dissolve === 0 ? cell : -1;
+      if (occlude && inside && alpha > 0 && dissolve === 0)
+        this.depthBuffer[cell] = Math.min(this.depthBuffer[cell], pz);
+    }
+    for (let i = 0; i < this.particles.length; i++) {
+      const offset = i * 7;
+      let alpha = this.projected[offset + 3];
+      if (alpha <= 0) continue;
+      const cell = this.projected[offset + 6];
+      if (occlude && cell >= 0 && this.projected[offset + 2] > this.depthBuffer[cell] + 18)
+        alpha *= 1 - occlusionWeight;
+      if (alpha <= 0.001) continue;
+      ctx.fillStyle = this.projected[offset + 5]
+        ? `rgba(182,154,247,${alpha * 0.95})`
+        : `rgba(234,235,220,${alpha})`;
+      const size = this.projected[offset + 4];
+      ctx.fillRect(this.projected[offset], this.projected[offset + 1], size, size);
     }
     // Sparse motes slowly travel away from the component and evaporate.
     for (let i = 0; i < 43; i++) {

@@ -1,14 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none">
-  <title>AIAM</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" fill="none" role="img" aria-labelledby="favicon-title">
+  <title id="favicon-title">IAMAI</title>
   <rect width="160" height="160" rx="24" fill="#000"/>
-  <g stroke="#efede7" stroke-width="14" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3">
-    <g transform="translate(44.72 18) scale(.72)">
-      <path class="wordmark-letter letter-a-first" data-letter="A" d="M0 72L36 0L72 72M14 44H58"/>
-      <path class="wordmark-letter letter-i" data-letter="I" d="M98 0V72" stroke="#b69af7"/>
-    </g>
-    <g transform="translate(18.8 90) scale(.72)">
-      <path class="wordmark-letter letter-a-second" data-letter="A" d="M0 72L36 0L72 72M14 44H58"/>
-      <path class="wordmark-letter letter-m" data-letter="M" d="M98 72V0L134 42L170 0V72"/>
-    </g>
+  <path fill="#b69af7" d="M44 120V40H55L80 73L105 40H116V120H104V61L80 92L56 61V120Z"/>
+  <g fill="#efede7">
+    <path d="M17 40H33V50H29V110H33V120H17V110H21V50H17Z"/>
+    <path d="M127 40H143V50H139V110H143V120H127V110H131V50H127Z"/>
   </g>
 </svg>

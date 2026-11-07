@@ -1,6 +1,6 @@
-# AIAM crawler website
+# IAMAI crawler website
 
-A presentation of the IAM Crawler: what it does, how it follows a customer's search journey, and why AI page reading helps it adapt to a changing independent aftermarket.
+A presentation of the IAMAI crawler: what it does, how it follows a customer's search journey, and why AI page reading helps it adapt to a changing independent aftermarket.
 
 Built with Vite, TypeScript, CSS and a custom Canvas 2D particle animation. The static site runs independently of the crawler. Its contact form sends submissions through FormSubmit.
 
@@ -30,7 +30,7 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 
 ## Three sections
 
-1. A geometric AIAM wordmark with a purple I, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between eight automotive parts every two seconds. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
+1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between eight automotive parts every two seconds. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
 2. The goal of a representative IAM market sample, a concise comparison with a fixed-shop crawler, and four workflow steps.
 3. A contact form addressed to `iamaicrawler@gmail.com`.
 
@@ -54,6 +54,16 @@ This command builds production files, then runs Playwright against the developme
 
 Playwright uses locally installed Google Chrome. Tests cover the three-section structure, exact hero copy and sequential reveal, mocked contact-form validation/success/retry, reduced motion, mobile navigation, viewport widths from 320px to 1920px, automated WCAG checks, deployment asset loading, identical screenshots across environments, and particle cursor scattering. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
 
+For visual review, start the local development server, then run:
+
+```sh
+node scripts/review-artwork.mjs
+```
+
+This captures desktop and mobile page layouts plus contact sheets of all eight sculptures at a fixed camera pose. The images are saved in `test-results/`, alongside per-part render timings printed to the terminal.
+
 ## Assets and reference
 
-The visual reference was [N2 Team](https://n2team.com/), interpreted through an independent layout and identity. The AIAM wordmark uses original vector glyphs; its I is purple (`#b69af7`) and the other letters are ivory. The favicon adapts the same glyphs into two rows for small sizes. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope is self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. Assets are served locally; only contact submissions use FormSubmit.
+The visual reference was [N2 Team](https://n2team.com/), interpreted through an independent layout and identity. The IAMAI wordmark uses original vector glyphs with mirrored ivory I/A pairs around a purple central M (`#b69af7`). The favicon uses the purple M framed by mirrored ivory I rails for legibility at small sizes.
+
+The original brake disc is preserved. The seven other sculptures use sampled 3D surfaces with realistic proportions, actual depth and mechanical cutouts: control arm, brake pads, steering wheel, radiator, V8 engine block, piston and brake caliper. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope is self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. Assets are served locally; only contact submissions use FormSubmit.

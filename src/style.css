@@ -846,7 +846,7 @@ tbody td:last-child {
     max-width: 320px;
   }
   tbody td:last-child:before {
-    content: "AIAM crawler";
+    content: "IAMAI crawler";
     display: block;
     color: var(--accent);
     font-size: 9px;
