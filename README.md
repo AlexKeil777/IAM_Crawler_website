@@ -31,12 +31,12 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 ## Three sections
 
 1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between eleven automotive parts every two seconds. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
-2. A large illustrative customer quote, the market context, and the question “How much more expensive are we?”. The “Check out our method” button dissolves into fine particles, which condense into an interactive four-step diagram. Select any step to explore its role, or return to the question.
+2. A large illustrative customer quote, the market context, and the question “How much more expensive are we?”. The “Check out our method” button dissolves into fine particles, which condense into an interactive four-step diagram. Select any step to explore its role. The explanation also covers advanced AI validation, exclusion of invalid offers, and five challenges under “Why is Crawling so difficult”.
 3. A contact form addressed to `info@iamaicrawler.com`.
 
 The hero uses two columns on desktop and stacks the logo, sculpture and text on smaller screens. The floating background figures have been removed. Purple accents are shared by the wordmark, particles, links, focus indicators and contact button.
 
-The main wordmark opens with I, A and the left half of M. A car mirror drops above its centre and reveals the reflected right half, completing IAMAI after about one second. The mirror then fades, leaving the complete wordmark. Paused or reduced motion shows the final logo immediately.
+The main wordmark opens with I, A and the left half of M. A larger car mirror descends over 2.6 seconds, with its glass facing the lettering. After a short pause, the mirror and lettering turn together over 1.6 seconds, revealing the reflected half inside the glass. The mirror stays in place after the reveal. Paused or reduced motion shows this final arrangement immediately.
 
 The header language selector offers DE, EN, IT and RU. All page copy, method details, metadata, accessible labels, form validation and submission messages follow the chosen language, which persists locally. English is the first-visit default. The English customer quote and market paragraphs are supplied marketing copy; the quote is visibly marked as illustrative.
 

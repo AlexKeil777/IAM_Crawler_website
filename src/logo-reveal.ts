@@ -1,9 +1,18 @@
-/** The second half of the palindrome is a reflection of the first half. */
+const smooth = (value: number) => {
+  const n = Math.max(0, Math.min(1, value));
+  return n * n * (3 - 2 * n);
+};
+
+/** A perpendicular mirror drops into place, then turns with the half-wordmark. */
 export class LogoReveal {
   private element = document.querySelector<HTMLElement>("#logo-reveal")!;
-  private mask = this.element.querySelector<SVGRectElement>(".logo-reflection-mask")!;
+  private source = this.element.querySelector<SVGGElement>(".logo-source")!;
+  private virtual = this.element.querySelector<SVGGElement>(".logo-virtual")!;
   private mirror = this.element.querySelector<SVGGElement>(".logo-mirror")!;
-  private glint = this.element.querySelector<SVGLineElement>(".logo-reflection-glint")!;
+  private plane = this.element.querySelector<SVGGElement>(".logo-mirror-plane")!;
+  private sheen = this.element.querySelector<SVGGElement>(".logo-mirror-sheen")!;
+  private glass = this.element.querySelector<SVGRectElement>(".logo-mirror-clip")!;
+  private edge = this.element.querySelector<SVGPathElement>(".logo-mirror-edge")!;
   private frame = 0;
   private finished = false;
   private started = performance.now();
@@ -12,7 +21,7 @@ export class LogoReveal {
     if (paused || document.hidden) this.finish();
     else {
       this.element.dataset.phase = "dropping";
-      this.mask.setAttribute("width", "0");
+      this.render(0, -240);
       this.frame = requestAnimationFrame((time) => this.draw(time));
     }
     document.addEventListener("visibilitychange", () => { if (document.hidden) this.finish(); });
@@ -23,26 +32,38 @@ export class LogoReveal {
   private finish() {
     cancelAnimationFrame(this.frame);
     this.finished = true;
-    this.mask.setAttribute("width", "180");
-    this.mirror.style.opacity = "0";
-    this.glint.style.opacity = "0";
+    this.render(1, 0);
     this.element.dataset.phase = "complete";
+  }
+
+  private render(turn: number, drop: number) {
+    // One orthographic camera turns around BOTH objects. The mirror lies at
+    // x=180, perpendicular to the lettering, with its silvered face toward I/A.
+    const yaw = turn * 28 * Math.PI / 180;
+    const pitch = turn * 4 * Math.PI / 180;
+    const c = Math.cos(yaw), s = Math.sin(yaw);
+    const cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const lettering = `matrix(${c} ${s * sp} 0 ${cp} ${180 * (1 - c)} ${-180 * s * sp})`;
+    const surface = `matrix(${s} ${-c * sp} 0 ${cp} 180 0)`;
+    this.source.setAttribute("transform", lettering);
+    // The virtual image uses the same camera and is visible only through the
+    // projected glass. It cannot appear beside or outside the physical mirror.
+    this.virtual.setAttribute("transform", lettering);
+    this.plane.setAttribute("transform", surface);
+    this.sheen.setAttribute("transform", surface);
+    this.glass.setAttribute("transform", surface);
+    this.mirror.setAttribute("transform", `translate(0 ${drop})`);
+    this.edge.setAttribute("d", `M180 ${-10 * cp}v${151 * cp}`);
   }
 
   private draw(time: number) {
     if (this.finished) return;
     const elapsed = (time - this.started) / 1000;
-    const drop = Math.min(1, elapsed / 0.94);
-    const ease = 1 - (1 - drop) ** 3;
-    const settle = Math.sin(drop * Math.PI * 2) * 2.5 * drop;
-    this.mirror.setAttribute("transform", `translate(0 ${-154 * (1 - ease) + settle}) rotate(${-7 * (1 - ease)} 180 5)`);
-    this.mirror.style.opacity = String(Math.min(1, elapsed * 7) * (1 - Math.max(0, (elapsed - 1.1) / 0.5)));
-    const progress = Math.max(0, Math.min(1, (elapsed - 0.58) / 0.42));
-    const reveal = progress * progress * (3 - 2 * progress);
-    this.mask.setAttribute("width", String(180 * reveal));
-    this.glint.style.opacity = String(Math.sin(progress * Math.PI) * 0.9);
-    if (elapsed >= 1) this.element.dataset.phase = "complete";
-    if (elapsed >= 1.6) this.finish();
+    const drop = smooth(elapsed / 2.6);
+    const turn = smooth((elapsed - 2.8) / 1.6);
+    this.render(turn, -240 * (1 - drop));
+    this.element.dataset.phase = elapsed < 2.8 ? "dropping" : "turning";
+    if (elapsed >= 4.4) this.finish();
     else this.frame = requestAnimationFrame((next) => this.draw(next));
   }
 }

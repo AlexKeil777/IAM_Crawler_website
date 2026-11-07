@@ -60,20 +60,52 @@ async function openMethod(page: Page) {
   await expect(page.locator("#story-view")).toBeHidden();
 }
 
-test("the car mirror reveals the symmetric logo within 1.2 seconds", async ({ page }) => {
+test("the mirror descends slowly, turns with the logo, and retains its reflection", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const start = new Date("2026-11-07T12:00:00Z");
   await page.clock.install({ time: start });
   await page.clock.pauseAt(new Date(start.getTime() + 100));
   await page.goto("./");
   const logo = page.locator("#logo-reveal");
+  const mirror = logo.locator(".logo-mirror");
+  const source = logo.locator(".logo-source");
+  const virtual = logo.locator(".logo-virtual");
+  const surface = logo.locator(".logo-mirror-clip");
+  const plane = logo.locator(".logo-mirror-plane");
   await expect(logo).toHaveAttribute("data-phase", "dropping");
-  await expect(logo.locator(".logo-reflection-mask")).toHaveAttribute("width", "0");
-  await expect(logo.locator(".logo-mirror")).toHaveCount(1);
+  const initialDrop = await mirror.getAttribute("transform");
+  const initialProjection = await source.getAttribute("transform");
+  await expect(logo.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
+  await expect(mirror.locator(".logo-reflection")).toHaveAttribute("clip-path", "url(#mirror-surface)");
   await expect(logo.locator(".logo-reflection image")).toHaveAttribute("transform", "translate(360 0) scale(-1 1)");
   await page.clock.runFor(1200);
+  await expect(logo).toHaveAttribute("data-phase", "dropping");
+  expect(await mirror.getAttribute("transform")).not.toBe(initialDrop);
+  expect((await plane.boundingBox())!.width).toBeLessThan(1);
+
+  await page.clock.runFor(1800);
+  await expect(logo).toHaveAttribute("data-phase", "turning");
+  const landedPosition = await mirror.getAttribute("transform");
+  const turningProjection = await source.getAttribute("transform");
+  await page.clock.runFor(600);
+  expect(await mirror.getAttribute("transform")).toBe(landedPosition);
+  expect(await source.getAttribute("transform")).not.toBe(turningProjection);
+  expect(await virtual.getAttribute("transform")).toBe(await source.getAttribute("transform"));
+  expect(await surface.getAttribute("transform")).toBe(await plane.getAttribute("transform"));
+
+  await page.clock.runFor(1100);
   await expect(logo).toHaveAttribute("data-phase", "complete");
-  await expect(logo.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
+  await expect(mirror).toHaveCSS("opacity", "1");
+  expect(await mirror.getAttribute("transform")).toBe(landedPosition);
+  expect(await source.getAttribute("transform")).not.toBe(initialProjection);
+  const glass = (await plane.boundingBox())!;
+  expect(glass.width).toBeGreaterThan(60);
+  expect(glass.height).toBeGreaterThan(70);
+  const finishedProjection = await source.getAttribute("transform");
+  await page.clock.fastForward(10000);
+  await expect(mirror).toHaveCSS("opacity", "1");
+  expect(await mirror.getAttribute("transform")).toBe(landedPosition);
+  expect(await source.getAttribute("transform")).toBe(finishedProjection);
 });
 
 test("reduced motion and pausing immediately complete the logo reflection", async ({ page }) => {
@@ -81,7 +113,8 @@ test("reduced motion and pausing immediately complete the logo reflection", asyn
   await page.goto("./");
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
   await expect(page.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
-  await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "0");
+  await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "1");
+  const completedProjection = await page.locator(".logo-source").getAttribute("transform");
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const start = new Date("2026-11-07T12:00:00Z");
   await page.clock.install({ time: start });
@@ -91,7 +124,38 @@ test("reduced motion and pausing immediately complete the logo reflection", asyn
   await page.locator(".motion-toggle").click();
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
   await expect(page.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
-  await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "0");
+  await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "1");
+  expect(await page.locator(".logo-source").getAttribute("transform")).toBe(completedProjection);
+  await page.locator(".motion-toggle").click();
+  await page.clock.fastForward(6000);
+  await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
+  await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "1");
+  expect(await page.locator(".logo-source").getAttribute("transform")).toBe(completedProjection);
+});
+
+test("the method explains AI validation and the five crawling challenges", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("./");
+  await openMethod(page);
+  const quality = page.locator(".method-quality");
+  await expect(quality.getByRole("heading")).toHaveText("Advanced AI for offer quality");
+  await expect(quality).toContainText(/part numbers/i);
+  await expect(quality).toContainText(/fitment/i);
+  await expect(quality).toContainText(/price/i);
+  await expect(quality).toContainText(/exclud/i);
+  const challenges = page.locator(".method-challenges");
+  await expect(challenges.getByRole("heading")).toHaveText("Why is Crawling so difficult");
+  await expect(challenges.getByRole("listitem")).toHaveCount(5);
+  await expect(challenges.locator("li strong")).toHaveText([
+    "Access through localized IP addresses",
+    "Incorrect prices on shop websites",
+    "Parts that do not meet quality or fitment requirements",
+    "Webshop bot protection",
+    "Huge amounts of data to scan",
+  ]);
+  const headingSize = await challenges.getByRole("heading").evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+  const bodySize = await challenges.locator("li span").first().evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+  expect(headingSize).toBeGreaterThan(bodySize);
 });
 
 for (const language of ["de", "en", "it", "ru"] as const) {

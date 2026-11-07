@@ -136,9 +136,9 @@ p { color: var(--muted); }
 }
 .hero-content { display: grid; grid-template-columns: 1fr 1.08fr; align-items: center; gap: 10px; width: 100%; }
 .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 26px; min-width: 0; }
-.hero-wordmark { display: block; width: clamp(230px, 25vw, 310px); max-width: 100%; aspect-ratio: 3; position: relative; }
+.hero-wordmark { display: block; width: clamp(260px, 28vw, 350px); max-width: 100%; aspect-ratio: 380 / 214; position: relative; }
 .hero-wordmark > svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.logo-mirror, .logo-reflection-glint { pointer-events: none; }
+.logo-mirror { pointer-events: none; }
 .hero-message { position: relative; width: 100%; min-width: 0; }
 .hero h1 { font-size: clamp(30px, 3.45vw, 46px); line-height: 1.42; letter-spacing: -0.045em; }
 .crawl-line { display: block; white-space: nowrap; }
@@ -284,7 +284,7 @@ p { color: var(--muted); }
   .hero { padding-block: 30px 95px; }
   .hero-content { grid-template-columns: 1fr; grid-template-areas: "wordmark" "art" "message"; justify-items: center; gap: 0; }
   .hero-copy { display: contents; }
-  .hero-wordmark { grid-area: wordmark; width: 230px; margin-bottom: -10px; }
+  .hero-wordmark { grid-area: wordmark; width: 280px; margin-bottom: -10px; }
   .hero-art { grid-area: art; max-width: 500px; height: 300px; }
   .hero-message { grid-area: message; max-width: 470px; text-align: center; }
   .hero h1 { font-size: 34px; }
@@ -312,7 +312,7 @@ p { color: var(--muted); }
   .menu-toggle[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }
   .menu-toggle[aria-expanded="true"] span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
   .hero { min-height: calc(100svh - 80px); padding-block: 22px 92px; }
-  .hero-wordmark { width: 205px; margin-bottom: -12px; }
+  .hero-wordmark { width: 250px; margin-bottom: -12px; }
   .hero-art { height: 255px; max-width: 420px; }
   .hero h1 { font-size: clamp(25px, 7.1vw, 34px); line-height: 1.45; }
   .intelligent-line { margin-top: 18px; font-size: 1.1em; }

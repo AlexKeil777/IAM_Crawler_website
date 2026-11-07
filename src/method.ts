@@ -86,6 +86,20 @@ export class MethodExperience {
           </div>
           <p id="method-detail-copy" aria-live="polite" aria-atomic="true"></p>
         </div>
+        <div class="method-quality">
+          <h3 data-i18n="methodQualityTitle">Advanced AI for offer quality</h3>
+          <p data-i18n="methodQualityDetail"></p>
+        </div>
+        <div class="method-challenges">
+          <h3 id="method-challenges-title" data-i18n="methodChallengesTitle">Why is Crawling so difficult</h3>
+          <ul aria-labelledby="method-challenges-title">
+            ${[1, 2, 3, 4, 5].map((index) => `
+              <li>
+                <strong data-i18n="methodChallenge${index}Title"></strong>
+                <span data-i18n="methodChallenge${index}Detail"></span>
+              </li>`).join("")}
+          </ul>
+        </div>
         <div class="method-output">
           <svg viewBox="0 0 32 32" width="32" height="32" aria-hidden="true" focusable="false"><path d="M8 3h12l6 6v20H8zM20 3v7h6M12 15h10M12 20h10M12 25h6"/></svg>
           <div>
