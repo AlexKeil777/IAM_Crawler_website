@@ -1,4 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { useContactFallback } from "./contact-fixture";
+
+test.beforeEach(async ({ context }) => {
+  await useContactFallback(context);
+  await context.route("https://formsubmit.co/**", (route) => route.abort());
+  await context.route("https://api.web3forms.com/**", (route) => route.abort());
+});
 
 test("all production resources stay inside the project URL and load successfully", async ({
   page,
@@ -44,6 +51,7 @@ test("development and deployed files render the same layout at both URL depths",
     viewport: { width: 1440, height: 1000 },
     reducedMotion: "reduce",
   });
+  await useContactFallback(context);
   const signatures: unknown[] = [];
   const frames: Buffer[] = [];
   for (const [name, url] of [

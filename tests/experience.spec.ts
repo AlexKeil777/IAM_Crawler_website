@@ -1,5 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { useContactFallback } from "./contact-fixture";
 
 const endpoint = "https://formsubmit.co/info@iamaicrawl.com";
 
@@ -42,7 +43,9 @@ const translations = {
 // Run the larger interaction/translation matrix once against development.
 test.beforeEach(async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "development", "Exercise experience variants once.");
+  await useContactFallback(page);
   await page.route("https://formsubmit.co/**", (route) => route.abort());
+  await page.route("https://api.web3forms.com/**", (route) => route.abort());
 });
 
 async function openMethod(page: Page) {

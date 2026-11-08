@@ -1,4 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { useContactFallback } from "./contact-fixture";
+
+test.beforeEach(async ({ page }) => {
+  await useContactFallback(page);
+  await page.route("https://formsubmit.co/**", (route) => route.abort());
+  await page.route("https://api.web3forms.com/**", (route) => route.abort());
+});
 
 test("particle sculpture follows live reduced-motion changes and resumes morphing", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });

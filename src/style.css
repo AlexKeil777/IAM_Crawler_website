@@ -238,6 +238,7 @@ p { color: var(--muted); }
 .form-field input:hover, .form-field textarea:hover { border-color: #77766b; }
 .form-field input:focus-visible, .form-field textarea:focus-visible { border-color: var(--accent); outline-offset: 3px; background: #10120e; }
 .form-actions { display: flex; align-items: center; gap: 23px; }
+.contact-captcha { min-height: 144px; }
 .submit-button {
   display: flex;
   align-items: center;
@@ -258,6 +259,7 @@ p { color: var(--muted); }
 .submit-button:disabled { opacity: 0.65; }
 .submit-button > [aria-hidden] { font-size: 15px; }
 #contact-status { font-size: 12px; line-height: 1.8; }
+.success { color: var(--accent); }
 .error { color: #f0b2cf; }
 .form-service { font-size: 10px; color: var(--muted); margin-top: -10px; }
 .form-service a { text-decoration: underline; text-underline-offset: 3px; }

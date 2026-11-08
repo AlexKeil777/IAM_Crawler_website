@@ -138,9 +138,11 @@
           </div>
         </div>
         <form id="contact-form" class="contact-form" action="https://formsubmit.co/info@iamaicrawl.com" method="POST">
+          <input type="hidden" name="access_key" value="04614226-5c56-4427-bbfa-330ccfc7633c" disabled />
           <input type="hidden" name="_subject" data-i18n-value="formSubject" value="IAMAI website enquiry" />
           <input type="hidden" name="_template" value="table" />
           <input type="hidden" name="_url" value="https://iamaicrawl.com/" />
+          <input type="hidden" name="_next" value="https://iamaicrawl.com/?contact=submitted#contact" />
           <div class="form-row">
             <div class="form-field">
               <label for="contact-name" data-i18n="nameLabel">Name</label>
@@ -159,11 +161,12 @@
             <label for="contact-message" data-i18n="messageLabel">Message</label>
             <textarea id="contact-message" name="message" rows="5" required maxlength="5000"></textarea>
           </div>
+          <div id="contact-captcha" class="contact-captcha" hidden></div>
           <div class="form-actions">
             <button class="submit-button" type="submit"><span class="submit-label" data-i18n="submitLabel">Send message</span><span aria-hidden="true">↗</span></button>
             <p id="contact-status" role="status" aria-live="polite" aria-atomic="true"></p>
           </div>
-          <p class="form-service"><span data-i18n="formVerification">Complete the verification on the next page to send your message.</span> <span data-i18n="formService">Sent using</span> <a href="https://formsubmit.co/" target="_blank" rel="noopener noreferrer">FormSubmit</a>.</p>
+          <p class="form-service"><span id="contact-verification-note" data-i18n="formVerification">Complete the verification on the next page to send your message.</span> <span data-i18n="formService">Sent using</span> <a id="contact-service-link" href="https://formsubmit.co/" target="_blank" rel="noopener noreferrer">FormSubmit</a>.</p>
           <p class="form-alternative"><a id="contact-email-link" href="mailto:info@iamaicrawl.com" data-i18n="emailAlternative">Or send an email directly</a></p>
         </form>
       </section>

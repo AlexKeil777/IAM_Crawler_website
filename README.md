@@ -2,7 +2,7 @@
 
 A presentation of the IAMAI crawler: what it does, how it follows a customer's search journey, and why AI page reading helps it adapt to a changing independent aftermarket.
 
-Built with Vite, TypeScript, CSS and a custom Canvas 2D particle animation. The static site runs independently of the crawler. Its contact form sends submissions through FormSubmit.
+Built with Vite, TypeScript, CSS and a custom Canvas 2D particle animation. The static site runs independently of the crawler. Its contact form uses Web3Forms with an embedded hCaptcha widget.
 
 ## Run locally
 
@@ -20,7 +20,7 @@ npm run build
 npm run preview
 ```
 
-The production build is in `dist/`. Its relative asset URLs work both at the domain root and under `/IAM_Crawler_website/`. No server-side configuration or runtime credentials are required.
+The production build is in `dist/`. Its relative asset URLs work both at the domain root and under `/IAM_Crawler_website/`. No application server or runtime secrets are required; contact service and CAPTCHA settings are configured in Web3Forms.
 
 ## GitHub Pages
 
@@ -44,11 +44,13 @@ The header stays fixed at the top while scrolling and contains navigation and th
 
 ## Contact form setup
 
-The form posts natively to `https://formsubmit.co/info@iamaicrawl.com`. FormSubmit's default CAPTCHA is enabled, and its page displays verification, activation instructions or rejection details. There is no AJAX request or local success message, reset or evaporation that could imply inbox delivery. Required fields are name, email and message; company is optional. Validation is localized. There is no honeypot field: browser autofill could populate the hidden text input and block legitimate submissions before they reached FormSubmit. CAPTCHA provides spam protection. The hidden `_url` defaults to the canonical website URL without JavaScript; JavaScript updates it to the current origin and path, excluding query parameters and fragments.
+With JavaScript, the form submits JSON to `https://api.web3forms.com/submit` and keeps visitors on the page. The public Web3Forms access key is configured in the hidden `access_key` input in `index.html`; it is intended for client-side use and is enabled by JavaScript. The form embeds a compact, dark hCaptcha widget using Web3Forms' shared site key. **Enable and keep hCaptcha protection enforced for this access key in the Web3Forms dashboard**, so the provider verifies tokens and rejects unverified requests. The widget, validation and submission messages follow the selected DE, EN, IT or RU language.
 
-The direct-email link opens the visitor's mail app addressed to `info@iamaicrawl.com`, with the translated subject and current name, email, company and message URI-encoded into the draft. Without JavaScript, it still opens a draft addressed to the mailbox. Verification instructions and link text are translated into all four languages.
+Required fields are name, email and message; company is optional. A solved CAPTCHA token is required before sending. Duplicate submissions are blocked, requests time out after 20 seconds, and single-use tokens reset after each request. Entered fields remain intact after success or failure. Rejections show the provider's actual message; network failures leave delivery unconfirmed. A successful response confirms acceptance, not delivery to the mailbox. Automated checks mock delivery endpoints; inbox delivery has not been verified.
 
-FormSubmit requires recipient activation, including after changing the recipient. Test from the served website, complete verification and follow the mailbox activation link if the provider requests it. See the [FormSubmit activation instructions](https://formsubmit.co/help). Automated browser checks intercept submissions; no genuine diagnostic email was sent, and inbox delivery has not been verified. An accepted request alone does not prove delivery to the mailbox.
+The native FormSubmit action is a fallback only when JavaScript is disabled or `access_key` is blank. Its hosted CAPTCHA can then appear. The disabled public key is excluded from native submissions. Hidden `_url` and `_next` values identify the page and return visitors to its contact section after acceptance; JavaScript updates these URLs for the current origin and path without campaign parameters. FormSubmit recipient activation may be required for this fallback.
+
+The direct-email link opens the visitor's mail app addressed to `info@iamaicrawl.com`, with the translated subject and current name, email, company and message URI-encoded into the draft. Without JavaScript, it still opens a draft addressed to the mailbox.
 
 The visible Impressum contains the supplied name and postal address, with a normal clickable LinkedIn URL. Unique four-character alphanumeric spans separate the name and address characters, including spaces. These spans match the black background, use a 0.001px font, occupy no layout space and are excluded from screen readers. This deters basic text scraping; a crawler that interprets the markup can still recover the address.
 
@@ -60,7 +62,7 @@ npm test
 
 This command builds production files, then runs Playwright against the development server, the built site at `/`, and the built site under `/IAM_Crawler_website/`. The production checks use a plain static server with real 404s, so source transforms and fallback HTML cannot hide missing assets.
 
-Playwright uses locally installed Google Chrome. Tests cover the three-section structure, exact hero copy and sequential reveal, contact-form validation and intercepted native submissions, direct-email drafts, reduced motion, mobile navigation, viewport widths from 320px to 1920px, automated WCAG checks, deployment asset loading, identical screenshots across environments, and particle cursor scattering. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
+Playwright uses locally installed Google Chrome. The inline contact suite uses a fake public key, mocked hCaptcha SDK and intercepted Web3Forms requests at all three URL depths. It covers CAPTCHA state, on-page submission, duplicate prevention, retry and preserved text without sending email. Baseline and native fallback fixtures clear the access key. Other checks cover the three-section structure, exact hero copy and sequential reveal, direct-email drafts, reduced motion, mobile navigation, viewport widths from 320px to 1920px, automated WCAG checks, deployment asset loading, identical screenshots across environments, and particle cursor scattering. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
 
 The experience tests also cover all four languages, language persistence, translated validation and form requests, the descending and rotating side mirror, its retained reflection and solid housing, interactive diagram keyboard controls, the finite particle transition and interruption by a change to the device's reduced-motion preference, and translated desktop/mobile layouts.
 
@@ -78,4 +80,4 @@ For the story, method and mirror reveal, run `node scripts/review-experience.mjs
 
 The visual reference was [N2 Team](https://n2team.com/), interpreted through an independent layout and identity. The IAMAI wordmark uses original vector glyphs with mirrored ivory I/A pairs around a purple central M (`#b69af7`). The favicon uses the purple M framed by mirrored ivory I rails for legibility at small sizes.
 
-The seven sculptures are inspired by the supplied part photos: an asymmetric cast control arm, flat-bottom sport steering wheel, split-spoke alloy rim, complete dual-pipe exhaust, performance brake caliper, elongated single-projector headlight and bare V8 engine block. They use sampled 3D surfaces with realistic depth, open sections and mechanical cutouts. The headlight follows the updated reference, with horizontal light guides and a rounded outer end. Prices vary by part, use realistic decimal amounts and morph between arrangements with the sculptures. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope's Latin and Cyrillic subsets are self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. The Cyrillic subset is the unmodified [Google Fonts Manrope v23 webfont](https://fonts.gstatic.com/s/manrope/v23/xn7gYHE41ni1AdIRggOxSuXd.woff2). Assets are served locally; only contact submissions use FormSubmit.
+The seven sculptures are inspired by the supplied part photos: an asymmetric cast control arm, flat-bottom sport steering wheel, split-spoke alloy rim, complete dual-pipe exhaust, performance brake caliper, elongated single-projector headlight and bare V8 engine block. They use sampled 3D surfaces with realistic depth, open sections and mechanical cutouts. The headlight follows the updated reference, with horizontal light guides and a rounded outer end. Prices vary by part, use realistic decimal amounts and morph between arrangements with the sculptures. Surface normals drive directional lighting, while occlusion keeps hidden surfaces from showing through the models. The sculpture and text animations use Canvas 2D, with native HTML text retained for accessibility and responsive layout. Manrope's Latin and Cyrillic subsets are self-hosted under the SIL Open Font License; see `public/fonts/OFL.txt`. The Cyrillic subset is the unmodified [Google Fonts Manrope v23 webfont](https://fonts.gstatic.com/s/manrope/v23/xn7gYHE41ni1AdIRggOxSuXd.woff2). Fonts and visual assets are served locally. External contact requests load the hCaptcha SDK and challenges and submit to Web3Forms; the native fallback uses FormSubmit.

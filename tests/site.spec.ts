@@ -1,12 +1,15 @@
 ﻿import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { useContactFallback } from "./contact-fixture";
 
 const endpoint = "https://formsubmit.co/info@iamaicrawl.com";
 const verificationPage = "<!doctype html><title>Form verification</title><h1>Complete form verification</h1>";
 
 // Never send real contact emails during automated browser checks.
 test.beforeEach(async ({ page }) => {
+  await useContactFallback(page);
   await page.route("https://formsubmit.co/**", (route) => route.abort());
+  await page.route("https://api.web3forms.com/**", (route) => route.abort());
 });
 
 async function fillContact(page: Page) {
@@ -192,9 +195,32 @@ test("contact form uses a native POST with CAPTCHA and shows provider verificati
   expect(payload.get("company")).toBe(company);
   expect(payload.get("message")?.replace(/\r\n/g, "\n")).toBe(message);
   expect(payload.get("_url")).toBe(source.origin + source.pathname);
+  expect(payload.get("_next")).toBe(`${source.origin}${source.pathname}?contact=submitted#contact`);
   expect(payload.get("_subject")).toBe("IAMAI website enquiry");
   expect(payload.has("_honey")).toBe(false);
   expect(payload.get("_captcha")).not.toBe("false");
+});
+
+test("successful native submissions return to the website with a translated confirmation", async ({ page }) => {
+  let returnUrl = "";
+  await page.route(endpoint, (route) => {
+    const payload = new URLSearchParams(route.request().postData() || "");
+    returnUrl = payload.get("_next")!;
+    return route.fulfill({ status: 303, headers: { location: returnUrl }, body: "" });
+  });
+  await page.goto("./?campaign=private#contact");
+  const source = new URL(page.url());
+  await fillContact(page);
+  await page.locator('#contact-form button[type="submit"]').click();
+  await expect(page).toHaveURL(`${source.origin}${source.pathname}#contact`);
+  await expect(page.locator("#contact-status")).toHaveText("Thank you. Your message has been submitted.");
+  await expect(page.locator("#contact-status")).toHaveClass("success");
+  expect(new URL(returnUrl).searchParams.has("campaign")).toBe(false);
+  await page.locator("#language-selector").selectOption("de");
+  await expect(page.locator("#contact-status")).toHaveText("Vielen Dank. Ihre Nachricht wurde übermittelt.");
+  // Don't replay an old confirmation when the visitor reloads the page.
+  await page.reload();
+  await expect(page.locator("#contact-status")).toBeEmpty();
 });
 
 test("contact form revalidates autofilled values after an invalid submission", async ({ page }) => {
@@ -236,6 +262,7 @@ test("native form submission works when JavaScript is disabled", async ({ browse
     expect(payload.get("email")).toBe("analyst@example.com");
     expect(payload.get("message")).toContain("aftermarket coverage");
     expect(payload.get("_url")).toBe("https://iamaicrawl.com/");
+    expect(payload.get("_next")).toBe("https://iamaicrawl.com/?contact=submitted#contact");
     expect(payload.get("_captcha")).not.toBe("false");
   } finally {
     await context.close();

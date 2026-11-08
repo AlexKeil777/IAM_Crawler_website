@@ -4,6 +4,7 @@ import { ParticleTextReveal } from "./text-reveal";
 import { MethodExperience } from "./method";
 import { initI18n, t } from "./i18n";
 import { LogoReveal } from "./logo-reveal";
+import { initInlineContact, type InlineStatusKey } from "./inline-contact";
 
 const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let paused = motionQuery.matches;
@@ -75,11 +76,28 @@ const form = document.querySelector<HTMLFormElement>("#contact-form")!;
 const status = document.querySelector<HTMLElement>("#contact-status")!;
 const emailLink = document.querySelector<HTMLAnchorElement>("#contact-email-link")!;
 const sourceUrl = form.querySelector<HTMLInputElement>('[name="_url"]')!;
+const returnUrl = form.querySelector<HTMLInputElement>('[name="_next"]')!;
 const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[required], textarea[required]")];
-let statusKey: "validationRequired" | "validationEmail" | null = null;
+let statusKey: InlineStatusKey | "validationRequired" | "validationEmail" | null = null;
+let statusDetail = "";
 // Validate current values in the submit handler, including browser autofill.
 form.noValidate = true;
-sourceUrl.value = `${window.location.origin}${window.location.pathname}`;
+function updateFormUrls() {
+  sourceUrl.value = `${window.location.origin}${window.location.pathname}`;
+  returnUrl.value = `${sourceUrl.value}?contact=submitted#contact`;
+}
+updateFormUrls();
+
+// FormSubmit redirects here after accepting the submission. This is a
+// thank-you message, not evidence of inbox delivery; don't reset any fields.
+const pageUrl = new URL(window.location.href);
+if (pageUrl.searchParams.get("contact") === "submitted") {
+  statusKey = "submittedStatus";
+  status.className = "success";
+  pageUrl.searchParams.delete("contact");
+  window.history.replaceState(window.history.state, "", pageUrl);
+}
+renderFormState();
 
 function localizeValidity(field: HTMLInputElement | HTMLTextAreaElement) {
   field.setCustomValidity("");
@@ -90,13 +108,14 @@ fields.forEach((field) => {
   field.addEventListener("invalid", () => {
     localizeValidity(field);
     statusKey = field.validity.typeMismatch ? "validationEmail" : "validationRequired";
+    statusDetail = "";
     status.className = "error";
     renderFormState();
   });
   field.addEventListener("input", () => localizeValidity(field));
 });
 function renderFormState() {
-  status.textContent = statusKey ? t(statusKey) : "";
+  status.textContent = statusKey ? [t(statusKey), statusDetail].filter(Boolean).join(" ") : "";
 }
 
 // Visitors can use their mail app if the delivery service rejects a submission.
@@ -117,25 +136,38 @@ form.addEventListener("input", updateEmailLink);
 emailLink.addEventListener("click", updateEmailLink);
 updateEmailLink();
 
+const inlineContact = initInlineContact(form, (key, kind, detail = "") => {
+  statusKey = key;
+  statusDetail = detail;
+  status.className = kind;
+  renderFormState();
+});
+
 form.addEventListener("submit", (event) => {
+  if (inlineContact) event.preventDefault();
   fields.forEach(localizeValidity);
   if (!form.reportValidity()) {
     event.preventDefault();
     return;
   }
-  sourceUrl.value = `${window.location.origin}${window.location.pathname}`;
+  updateFormUrls();
+  if (inlineContact) {
+    void inlineContact.submit();
+    return;
+  }
   statusKey = null;
+  statusDetail = "";
   status.className = "";
   renderFormState();
-  // Let the browser POST normally. FormSubmit can now display its CAPTCHA,
-  // activation instructions and actual rejection reason instead of hiding them
-  // behind an AJAX error. Only the provider can confirm accepting a message.
+  // Keep the native POST for CAPTCHA, activation and rejection details. The
+  // provider uses _next to return here instead of showing its thank-you page.
 });
 window.addEventListener("languagechange", () => {
   menuLabel();
   fields.forEach(localizeValidity);
   renderFormState();
   updateEmailLink();
+  inlineContact?.localize();
   fitHero();
   void document.fonts.ready.then(fitHero);
 });
