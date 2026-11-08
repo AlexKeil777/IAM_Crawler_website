@@ -1,10 +1,9 @@
 ﻿import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const endpoint = "https://formsubmit.co/ajax/info@iamaicrawl.com";
-const unavailableStatus = "The contact service is temporarily unavailable. Your message is still in the form. Please try again later.";
-const unconfirmedStatus = "Delivery could not be confirmed. Your message is still in the form. Please try again.";
+const endpoint = "https://formsubmit.co/info@iamaicrawl.com";
 const rejectedStatus = "Message could not be sent. Your message is still in the form. Please try again.";
+const verificationPage = "<!doctype html><title>Form verification</title><h1>Complete form verification</h1>";
 
 // Never send real contact emails during automated browser checks.
 test.beforeEach(async ({ page }) => {
@@ -55,10 +54,9 @@ test("the page has three focused sections and the requested hero copy", async ({
   await expect(page.locator("#method-view")).toBeHidden();
   await expect(page.locator("#explanation")).toHaveAttribute("data-view", "story");
   await expect(page.locator("#explanation table")).toHaveCount(0);
-  await expect(page.locator("body")).not.toContainText("info@iamaicrawl.com");
   await expect(page.locator("body")).not.toContainText("info@iamaicrawler.com");
-  await expect(page.locator(".email-link")).toHaveCount(0);
-  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+  await expect(page.locator("#contact-email-link")).toBeVisible();
+  await expect(page.locator("#contact-email-link")).toHaveAttribute("href", /^mailto:info@iamaicrawl\.com/);
   await expect(page.locator("#contact-form")).toHaveAttribute(
     "action",
     "https://formsubmit.co/info@iamaicrawl.com",
@@ -67,6 +65,7 @@ test("the page has three focused sections and the requested hero copy", async ({
     "method",
     /post/i,
   );
+  await expect(page.locator('#contact-form [name="_captcha"][value="false"]')).toHaveCount(0);
   await expect(page.locator("body")).not.toContainText("Form changes.");
 });
 
@@ -159,48 +158,49 @@ test("contact form validates required fields before sending", async ({
   expect(submissions).toBe(0);
 });
 
-test("contact form sends to the intended endpoint and confirms success", async ({
-  page,
-}) => {
-  let payload = "";
-  let release!: () => void;
-  const pending = new Promise<void>((resolve) => {
-    release = resolve;
-  });
+test("contact form uses a native POST with CAPTCHA and shows provider verification", async ({ page }) => {
+  let attempts = 0;
+  let payload = new URLSearchParams();
+  let navigationRequest = false;
+  let contentType = "";
   await page.route(endpoint, async (route) => {
-    expect(route.request().method()).toBe("POST");
-    payload = route.request().postData() || "";
-    await pending;
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: "true" }),
-    });
+    attempts++;
+    const request = route.request();
+    expect(request.method()).toBe("POST");
+    navigationRequest = request.isNavigationRequest();
+    contentType = request.headers()["content-type"];
+    payload = new URLSearchParams(request.postData() || "");
+    await route.fulfill({ status: 200, contentType: "text/html", body: verificationPage });
   });
-  await page.goto("./");
+  await page.goto("./?campaign=contact#contact");
+  const source = new URL(page.url());
   await fillContact(page);
+  const name = "Müller & Partners";
+  const company = "R&D + Europe";
+  const message = "Please compare A&B = 20% cheaper.\nDetails: https://example.com/part?a=1&b=2\nПривет";
+  await page.locator("#contact-name").fill(name);
+  await page.locator("#contact-company").fill(company);
+  await page.locator("#contact-message").fill(message);
   const submit = page.locator('#contact-form button[type="submit"]');
   await submit.click();
-  await expect(submit).toBeDisabled();
-  await expect(page.locator("#contact-status")).toHaveText("Sending…");
-  release();
-  await expect(page.locator("#contact-status")).toHaveText("Message sent!");
-  expect(payload).toContain("Market analyst");
-  expect(payload).toContain("analyst@example.com");
-  const source = new URL(page.url());
-  expect(JSON.parse(payload)._url).toBe(`${source.origin}${source.pathname}`);
-  await expect(page.locator('#contact-form [name="name"]')).toHaveValue("");
-  await expect(page.locator('#contact-form [name="email"]')).toHaveValue("");
-  await expect(page.locator('#contact-form [name="message"]')).toHaveValue("");
-  await expect(submit).toBeEnabled();
-  await expect(page.locator("#contact-status")).toHaveText("", { timeout: 2000 });
+  await expect(page).toHaveURL(endpoint);
+  await expect(page.getByRole("heading", { name: "Complete form verification" })).toBeVisible();
+  expect(attempts).toBe(1);
+  expect(navigationRequest).toBe(true);
+  expect(contentType).toContain("application/x-www-form-urlencoded");
+  expect(payload.get("name")).toBe(name);
+  expect(payload.get("email")).toBe("analyst@example.com");
+  expect(payload.get("company")).toBe(company);
+  expect(payload.get("message")?.replace(/\r\n/g, "\n")).toBe(message);
+  expect(payload.get("_url")).toBe(source.origin + source.pathname);
+  expect(payload.get("_subject")).toBe("IAMAI website enquiry");
+  expect(payload.get("_honey")).toBe("");
+  expect(payload.get("_captcha")).not.toBe("false");
 });
 
 test("contact form revalidates autofilled values after an invalid submission", async ({ page }) => {
   await page.route(endpoint, (route) => route.fulfill({
-    status: 200,
-    contentType: "application/json",
-    body: JSON.stringify({ success: true }),
+    status: 200, contentType: "text/html", body: verificationPage,
   }));
   await page.goto("./");
   await page.locator('#contact-form button[type="submit"]').click();
@@ -211,113 +211,72 @@ test("contact form revalidates autofilled values after an invalid submission", a
     (form.elements.namedItem("message") as HTMLTextAreaElement).value = "Please contact me.";
   });
   await page.locator('#contact-form button[type="submit"]').click();
-  await expect(page.locator("#contact-status")).toHaveText("Message sent!");
-  await expect(page.locator("#contact-message")).toHaveValue("");
+  await expect(page).toHaveURL(endpoint);
+  await expect(page.getByRole("heading", { name: "Complete form verification" })).toBeVisible();
 });
 
-test("a failed contact submission preserves the message and allows retry", async ({
-  page,
-}) => {
-  let attempts = 0;
-  await page.route(endpoint, (route) => {
-    attempts++;
-    return route.fulfill({
-      status: attempts === 1 ? 400 : 200,
-      contentType: "application/json",
-      body: JSON.stringify({ success: attempts === 1 ? "false" : "true" }),
-    });
+test("native form submission works when JavaScript is disabled", async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  let payload = new URLSearchParams();
+  await context.route("https://formsubmit.co/**", (route) => {
+    expect(route.request().url()).toBe(endpoint);
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().isNavigationRequest()).toBe(true);
+    payload = new URLSearchParams(route.request().postData() || "");
+    return route.fulfill({ status: 200, contentType: "text/html", body: verificationPage });
   });
-  await page.goto("./");
-  await fillContact(page);
-  const submit = page.locator('#contact-form button[type="submit"]');
-  await submit.click();
-  await expect(page.locator("#contact-status")).toHaveText(
-    rejectedStatus,
-  );
-  await expect(page.locator('#contact-form [name="message"]')).toHaveValue(
-    "I would like to discuss aftermarket coverage in Germany.",
-  );
-  await expect(submit).toBeEnabled();
-  await submit.click();
-  await expect(page.locator("#contact-status")).toHaveText("Message sent!");
-  expect(attempts).toBe(2);
-});
-
-test("a FormSubmit 522 outage preserves the complete message without an automatic resend", async ({ page }) => {
-  let attempts = 0;
-  let sourceUrl = "";
-  await page.route(endpoint, (route) => {
-    attempts++;
-    sourceUrl = route.request().postDataJSON()._url;
-    return route.fulfill({ status: 522, contentType: "text/html", body: "<h1>Connection timed out</h1>" });
-  });
-  await page.goto("./?campaign=contact#contact");
-  await fillContact(page);
-  const name = "Müller & Partners";
-  const company = "R&D + Europe";
-  const message = "Please compare A&B = 20% cheaper.\nDetails: https://example.com/part?a=1&b=2\nПривет";
-  await page.locator("#contact-name").fill(name);
-  await page.locator("#contact-company").fill(company);
-  await page.locator("#contact-message").fill(message);
-  await page.locator('#contact-form button[type="submit"]').click();
-  await expect(page.locator("#contact-status")).toHaveText(unavailableStatus);
-  await expect(page.locator("#contact-name")).toHaveValue(name);
-  await expect(page.locator("#contact-company")).toHaveValue(company);
-  await expect(page.locator("#contact-message")).toHaveValue(message);
-  await expect(page.locator('#contact-form button[type="submit"]')).toBeEnabled();
-  await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
-  const source = new URL(page.url());
-  expect(sourceUrl).toBe(`${source.origin}${source.pathname}`);
-  expect(attempts).toBe(1);
-});
-
-test("a network failure leaves delivery unconfirmed without retrying automatically", async ({ page }) => {
-  let attempts = 0;
-  await page.route(endpoint, (route) => { attempts++; return route.abort("failed"); });
-  await page.goto("./");
-  await fillContact(page);
-  await page.locator('#contact-form button[type="submit"]').click();
-  await expect(page.locator("#contact-status")).toHaveText(unconfirmedStatus);
-  await expect(page.locator("#contact-message")).toHaveValue("I would like to discuss aftermarket coverage in Germany.");
-  await expect(page.locator('#contact-form button[type="submit"]')).toBeEnabled();
-  expect(attempts).toBe(1);
-});
-
-test("a stalled contact request times out while preserving the message", async ({ page }) => {
-  await page.clock.install();
-  let attempts = 0;
-  await page.route(endpoint, () => { attempts++; });
-  await page.goto("./");
-  await fillContact(page);
-  const submit = page.locator('#contact-form button[type="submit"]');
-  await submit.click();
-  await expect(submit).toBeDisabled();
-  await page.clock.fastForward(20001);
-  await expect(page.locator("#contact-status")).toHaveText(unconfirmedStatus);
-  await expect(submit).toBeEnabled();
-  await expect(page.locator("#contact-message")).toHaveValue("I would like to discuss aftermarket coverage in Germany.");
-  expect(attempts).toBe(1);
-});
-
-test("a non-JSON success response does not discard an undelivered contact message", async ({ page }) => {
-  await page.route(endpoint, (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<h1>Temporarily unavailable</h1>" }));
-  await page.goto("./");
-  await fillContact(page);
-  await page.locator('#contact-form button[type="submit"]').click();
-  await expect(page.locator("#contact-status")).toHaveText(unavailableStatus);
-  await expect(page.locator("#contact-message")).toHaveValue("I would like to discuss aftermarket coverage in Germany.");
-});
-
-for (const result of [{ success: "false" }, { message: "No success confirmation" }]) {
-  test(`an unconfirmed FormSubmit result ${JSON.stringify(result)} never reports success`, async ({ page }) => {
-    await page.route(endpoint, (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(result) }));
+  try {
     await page.goto("./");
+    await expect(page.locator("#contact-email-link")).toBeVisible();
     await fillContact(page);
     await page.locator('#contact-form button[type="submit"]').click();
-    await expect(page.locator("#contact-status")).toHaveText(rejectedStatus);
-    await expect(page.locator("#contact-message")).toHaveValue("I would like to discuss aftermarket coverage in Germany.");
+    await expect(page).toHaveURL(endpoint);
+    await expect(page.getByRole("heading", { name: "Complete form verification" })).toBeVisible();
+    expect(payload.get("name")).toBe("Market analyst");
+    expect(payload.get("email")).toBe("analyst@example.com");
+    expect(payload.get("message")).toContain("aftermarket coverage");
+    expect(payload.get("_url")).toBe("https://iamaicrawl.com/");
+    expect(payload.get("_captcha")).not.toBe("false");
+  } finally {
+    await context.close();
+  }
+});
+
+test("direct email includes the complete form text without sending it through FormSubmit", async ({ page }) => {
+  let providerRequests = 0;
+  page.on("request", (request) => {
+    if (request.url().startsWith("https://formsubmit.co/")) providerRequests++;
   });
-}
+  await page.goto("./");
+  const name = "Müller & Partners";
+  const company = "R&D + Europe";
+  const message = "A&B = 20% cheaper.\nDetails: https://example.com/part?a=1&b=2\nПривет";
+  await page.locator("#contact-name").fill(name);
+  await page.locator("#contact-email").fill("analyst@example.com");
+  await page.locator("#contact-company").fill(company);
+  await page.locator("#contact-message").fill(message);
+  const link = page.locator("#contact-email-link");
+  await expect(link).toBeVisible();
+  const email = new URL((await link.getAttribute("href"))!);
+  expect(email.protocol).toBe("mailto:");
+  expect(email.pathname).toBe("info@iamaicrawl.com");
+  expect(email.searchParams.get("subject")).toBe("IAMAI website enquiry");
+  const body = email.searchParams.get("body")?.replace(/\r\n/g, "\n") || "";
+  for (const value of [name, "analyst@example.com", company, message]) expect(body).toContain(value);
+  // Autofill and Back can change fields without input events. Refresh the
+  // draft on activation while preventing the test from opening a mail app.
+  await page.locator("#contact-message").evaluate((field: HTMLTextAreaElement) => {
+    field.value = "Restored message & updated details";
+  });
+  await link.evaluate((anchor: HTMLAnchorElement) => {
+    anchor.addEventListener("click", (event) => event.preventDefault(), { once: true });
+    anchor.click();
+  });
+  const refreshed = new URL((await link.getAttribute("href"))!);
+  expect(refreshed.searchParams.get("body")).toContain("Restored message & updated details");
+  expect(providerRequests).toBe(0);
+});
 
 test("the honeypot blocks contact delivery", async ({ page }) => {
   let attempts = 0;

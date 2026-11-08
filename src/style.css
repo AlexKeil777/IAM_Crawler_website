@@ -193,6 +193,21 @@ p { color: var(--muted); }
 .contact { display: grid; grid-template-columns: 0.8fr 1.2fr; gap: 100px; padding-block: 110px 100px; }
 .contact h2 { font-size: 46px; }
 .contact-intro > p { font-size: 13px; max-width: 270px; margin-top: 20px; }
+.impressum { margin-top: 46px; scroll-margin-top: 24px; }
+.impressum h3 { font-size: 18px; letter-spacing: -0.025em; }
+.impressum address { margin-top: 16px; font-size: 13px; font-style: normal; line-height: 1.9; }
+.impressum-linkedin { display: inline-block; margin-top: 12px; color: var(--accent); overflow-wrap: anywhere; text-decoration: underline; text-underline-offset: 4px; }
+.impressum-noise {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  color: #000;
+  font-size: 0.001px;
+  line-height: 0;
+  user-select: none;
+  pointer-events: none;
+}
 .contact-form { display: flex; flex-direction: column; gap: 24px; position: relative; min-width: 0; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
 .form-field { min-width: 0; display: flex; flex-direction: column; gap: 9px; }
@@ -235,26 +250,16 @@ p { color: var(--muted); }
 .submit-button:disabled { opacity: 0.65; }
 .submit-button > [aria-hidden] { font-size: 15px; }
 #contact-status { font-size: 12px; line-height: 1.8; }
-.form-field:has(#contact-message), .form-actions { position: relative; }
-.contact-evaporation {
-  position: absolute;
-  z-index: 1;
-  box-sizing: border-box;
-  border-style: solid;
-  border-color: transparent;
-  overflow: hidden;
-  pointer-events: none;
-  user-select: none;
-  transform-origin: center bottom;
-}
-[data-motion="paused"] .contact-evaporation { display: none; }
-.success { color: var(--accent); }
 .error { color: #f0b2cf; }
 .form-service { font-size: 10px; color: var(--muted); margin-top: -10px; }
 .form-service a { text-decoration: underline; text-underline-offset: 3px; }
+.form-alternative { font-size: 12px; margin-top: -8px; }
+.form-alternative a { color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
 .honeypot { position: absolute !important; left: -10000px !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important; }
 .site-footer { border-top: 1px solid var(--rule); padding-block: 22px; display: flex; align-items: center; justify-content: space-between; }
 .site-footer > a:first-child { height: 28px; }
+.site-footer .impressum-link { font-size: 11px; color: var(--muted); }
+.site-footer .impressum-link:hover { color: var(--ink); }
 .site-footer > a:last-child { font-size: 11px; color: var(--muted); }
 .site-footer > a:last-child > [aria-hidden] { margin-left: 14px; color: var(--accent); }
 @keyframes line-fallback {
@@ -331,6 +336,5 @@ p { color: var(--muted); }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .contact-evaporation { display: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }

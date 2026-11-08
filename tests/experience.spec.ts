@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const endpoint = "https://formsubmit.co/ajax/info@iamaicrawl.com";
+const endpoint = "https://formsubmit.co/info@iamaicrawl.com";
 
 const translations = {
   de: {
@@ -11,8 +11,6 @@ const translations = {
     contact: "Kontakt", message: "Nachricht", language: "Sprache",
     menu: "Navigation öffnen", subject: "Anfrage über die IAMAI-Website",
     required: "Bitte füllen Sie dieses Feld aus.", invalidEmail: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
-    success: "Nachricht gesendet.",
-    failure: "Die Nachricht konnte nicht gesendet werden. Ihre Nachricht steht weiterhin im Formular. Bitte versuchen Sie es erneut.",
   },
   en: {
     title: "IAMAI — Intelligent IAM crawling", hero: "Crawl efficiently",
@@ -21,8 +19,6 @@ const translations = {
     contact: "Contact", message: "Message", language: "Language",
     menu: "Open navigation", subject: "IAMAI website enquiry",
     required: "Please complete this field.", invalidEmail: "Please enter a valid email address.",
-    success: "Message sent!",
-    failure: "Message could not be sent. Your message is still in the form. Please try again.",
   },
   it: {
     title: "IAMAI — Crawling intelligente per l'IAM", hero: "Esplora con efficienza",
@@ -31,8 +27,6 @@ const translations = {
     contact: "Contatti", message: "Messaggio", language: "Lingua",
     menu: "Apri il menu di navigazione", subject: "Richiesta dal sito IAMAI",
     required: "Compila questo campo.", invalidEmail: "Inserisci un indirizzo email valido.",
-    success: "Messaggio inviato.",
-    failure: "Impossibile inviare il messaggio. Il messaggio è ancora nel modulo. Riprova.",
   },
   ru: {
     title: "IAMAI — Интеллектуальный сбор данных об IAM", hero: "Собирайте эффективно",
@@ -41,8 +35,6 @@ const translations = {
     contact: "Контакты", message: "Сообщение", language: "Язык",
     menu: "Открыть меню навигации", subject: "Обращение с сайта IAMAI",
     required: "Заполните это поле.", invalidEmail: "Введите корректный адрес электронной почты.",
-    success: "Сообщение отправлено.",
-    failure: "Не удалось отправить сообщение. Ваше сообщение осталось в форме. Попробуйте ещё раз.",
   },
 } as const;
 
@@ -230,17 +222,18 @@ test("the method explains AI validation and the five crawling challenges", async
 });
 
 for (const language of ["de", "en", "it", "ru"] as const) {
-  test(`${language} translates the page, method, native validation and submission states`, async ({ page }) => {
+  test(`${language} translates the page, method, validation and native form submission`, async ({ page }) => {
     const copy = translations[language];
     let attempts = 0;
-    let payload: Record<string, string> = {};
+    let payload = new URLSearchParams();
     await page.route(endpoint, async (route) => {
       attempts++;
-      payload = route.request().postDataJSON();
+      expect(route.request().method()).toBe("POST");
+      expect(route.request().isNavigationRequest()).toBe(true);
+      payload = new URLSearchParams(route.request().postData() || "");
       await route.fulfill({
-        status: attempts === 1 ? 400 : 200,
-        contentType: "application/json",
-        body: JSON.stringify({ success: attempts !== 1 }),
+        status: 200, contentType: "text/html",
+        body: "<!doctype html><title>Form verification</title><h1>Complete form verification</h1>",
       });
     });
     await page.emulateMedia({ reducedMotion: "reduce" });
@@ -272,16 +265,16 @@ for (const language of ["de", "en", "it", "ru"] as const) {
     expect(await page.locator("#contact-email").evaluate((field: HTMLInputElement) => field.validationMessage)).toBe(copy.invalidEmail);
     expect(attempts).toBe(0);
     await page.locator("#contact-email").fill("analyst@example.com");
+    const email = new URL((await page.locator("#contact-email-link").getAttribute("href"))!);
+    expect(email.searchParams.get("subject")).toBe(copy.subject);
+    expect(email.searchParams.get("body")).toContain("Please discuss aftermarket coverage in Germany.");
     await submit.click();
-    await expect(page.locator("#contact-status")).toHaveText(copy.failure);
-    await expect(page.locator("#contact-message")).toHaveValue("Please discuss aftermarket coverage in Germany.");
-    await submit.click();
-    await expect(page.locator("#contact-status")).toHaveText(copy.success);
-    expect(attempts).toBe(2);
-    expect(payload.email).toBe("analyst@example.com");
-    expect(payload._subject).toBe(copy.subject);
-    await expect(page.locator("#contact-name")).toHaveValue("");
-    await expect(submit).toBeEnabled();
+    await expect(page).toHaveURL(endpoint);
+    await expect(page.getByRole("heading", { name: "Complete form verification" })).toBeVisible();
+    expect(attempts).toBe(1);
+    expect(payload.get("email")).toBe("analyst@example.com");
+    expect(payload.get("_subject")).toBe(copy.subject);
+    expect(payload.get("_captcha")).not.toBe("false");
   });
 }
 
@@ -381,30 +374,29 @@ test("language selection persists and translates an already open method", async 
   await expect(page.locator("#language-selector")).toHaveValue("ru");
 });
 
-test("switching language updates an in-flight contact submission and its result", async ({ page }) => {
-  let release!: () => void;
-  const pending = new Promise<void>((resolve) => { release = resolve; });
-  await page.route(endpoint, async (route) => {
-    await pending;
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ success: true }) });
-  });
+test("switching language updates contact validation and the direct email subject", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
-  await page.locator("#contact-name").fill("Market analyst");
-  await page.locator("#contact-email").fill("analyst@example.com");
-  await page.locator("#contact-message").fill("Please discuss aftermarket coverage.");
   const submit = page.locator('#contact-form button[type="submit"]');
   await submit.click();
-  await expect(submit).toBeDisabled();
-  await expect(page.locator(".submit-label")).toHaveText("Sending…");
+  await expect(page.locator("#contact-status")).toHaveText(translations.en.required);
   await page.locator("#language-selector").selectOption("de");
-  await expect(page.locator(".submit-label")).toHaveText("Wird gesendet…");
-  await expect(page.locator("#contact-message")).toHaveValue("Please discuss aftermarket coverage.");
-  release();
-  await expect(page.locator("#contact-status")).toHaveText(translations.de.success);
-  await expect(submit).toBeEnabled();
+  await expect(page.locator("#contact-status")).toHaveText(translations.de.required);
+  expect(await page.locator("#contact-name").evaluate((field: HTMLInputElement) => field.validationMessage)).toBe(translations.de.required);
+  await page.locator("#contact-name").fill("Müller & Partners");
+  await page.locator("#contact-email").fill("invalid-email");
+  await page.locator("#contact-message").fill("Please discuss aftermarket coverage. Привет");
+  await submit.click();
+  await expect(page.locator("#contact-status")).toHaveText(translations.de.invalidEmail);
   await page.locator("#language-selector").selectOption("ru");
-  await expect(page.locator("#contact-status")).toHaveText(translations.ru.success);
+  await expect(page.locator("#contact-status")).toHaveText(translations.ru.invalidEmail);
+  expect(await page.locator("#contact-email").evaluate((field: HTMLInputElement) => field.validationMessage)).toBe(translations.ru.invalidEmail);
+  const email = new URL((await page.locator("#contact-email-link").getAttribute("href"))!);
+  expect(email.searchParams.get("subject")).toBe(translations.ru.subject);
+  expect(email.searchParams.get("body")).toContain("Müller & Partners");
+  expect(email.searchParams.get("body")).toContain("Please discuss aftermarket coverage. Привет");
+  await expect(page.locator("#contact-message")).toHaveValue("Please discuss aftermarket coverage. Привет");
+  await expect(submit).toBeEnabled();
 });
 
 test("all languages fit phone, tablet and desktop in both story and method views", async ({ page }) => {

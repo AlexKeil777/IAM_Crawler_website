@@ -125,11 +125,20 @@
         <div class="contact-intro">
           <h2 id="contact-title" data-i18n="contactTitle">Contact</h2>
           <p data-i18n="contactIntro">For questions about the crawler or market coverage.</p>
+          <div class="impressum" id="impressum" aria-labelledby="impressum-title">
+            <h3 id="impressum-title" lang="de">Impressum</h3>
+            <address>
+              <p>A<span class="impressum-noise" aria-hidden="true">a00A</span>l<span class="impressum-noise" aria-hidden="true">h31L</span>e<span class="impressum-noise" aria-hidden="true">o62W</span>x<span class="impressum-noise" aria-hidden="true">v93H</span>a<span class="impressum-noise" aria-hidden="true">c24S</span>n<span class="impressum-noise" aria-hidden="true">j55D</span>d<span class="impressum-noise" aria-hidden="true">q86O</span>e<span class="impressum-noise" aria-hidden="true">x17Z</span>r<span class="impressum-noise" aria-hidden="true">e48K</span> <span class="impressum-noise" aria-hidden="true">l79V</span>K<span class="impressum-noise" aria-hidden="true">s10G</span>e<span class="impressum-noise" aria-hidden="true">z41R</span>i<span class="impressum-noise" aria-hidden="true">g72C</span>l</p>
+              <p>F<span class="impressum-noise" aria-hidden="true">n03N</span>r<span class="impressum-noise" aria-hidden="true">u34Y</span>e<span class="impressum-noise" aria-hidden="true">b65J</span>i<span class="impressum-noise" aria-hidden="true">i96U</span>s<span class="impressum-noise" aria-hidden="true">p27F</span>c<span class="impressum-noise" aria-hidden="true">w58Q</span>h<span class="impressum-noise" aria-hidden="true">d89B</span>ü<span class="impressum-noise" aria-hidden="true">k20M</span>t<span class="impressum-noise" aria-hidden="true">r51X</span>z<span class="impressum-noise" aria-hidden="true">y82I</span>s<span class="impressum-noise" aria-hidden="true">f13T</span>t<span class="impressum-noise" aria-hidden="true">m44E</span>r<span class="impressum-noise" aria-hidden="true">t75P</span>a<span class="impressum-noise" aria-hidden="true">a06A</span>s<span class="impressum-noise" aria-hidden="true">h37L</span>s<span class="impressum-noise" aria-hidden="true">o68W</span>e<span class="impressum-noise" aria-hidden="true">v99H</span> <span class="impressum-noise" aria-hidden="true">c30S</span>1<span class="impressum-noise" aria-hidden="true">j61D</span>0<span class="impressum-noise" aria-hidden="true">q92O</span>4</p>
+              <p>8<span class="impressum-noise" aria-hidden="true">x23Z</span>1<span class="impressum-noise" aria-hidden="true">e54K</span>9<span class="impressum-noise" aria-hidden="true">l85V</span>2<span class="impressum-noise" aria-hidden="true">s16G</span>7<span class="impressum-noise" aria-hidden="true">z47R</span> <span class="impressum-noise" aria-hidden="true">g78C</span>M<span class="impressum-noise" aria-hidden="true">n09N</span>u<span class="impressum-noise" aria-hidden="true">u40Y</span>n<span class="impressum-noise" aria-hidden="true">b71J</span>i<span class="impressum-noise" aria-hidden="true">i02U</span>c<span class="impressum-noise" aria-hidden="true">p33F</span>h</p>
+              <a class="impressum-linkedin" href="https://www.linkedin.com/in/alexkeil" target="_blank" rel="noopener noreferrer">www.linkedin.com/in/alexkeil</a>
+            </address>
+          </div>
         </div>
         <form id="contact-form" class="contact-form" action="https://formsubmit.co/info@iamaicrawl.com" method="POST">
           <input type="hidden" name="_subject" data-i18n-value="formSubject" value="IAMAI website enquiry" />
           <input type="hidden" name="_template" value="table" />
-          <input type="hidden" name="_captcha" value="false" />
+          <input type="hidden" name="_url" value="https://iamaicrawl.com/" />
           <input class="honeypot" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <div class="form-row">
             <div class="form-field">
@@ -153,12 +162,14 @@
             <button class="submit-button" type="submit"><span class="submit-label" data-i18n="submitLabel">Send message</span><span aria-hidden="true">↗</span></button>
             <p id="contact-status" role="status" aria-live="polite" aria-atomic="true"></p>
           </div>
-          <p class="form-service"><span data-i18n="formService">Sent using</span> <a href="https://formsubmit.co/" target="_blank" rel="noopener noreferrer">FormSubmit</a>.</p>
+          <p class="form-service"><span data-i18n="formVerification">Complete the verification on the next page to send your message.</span> <span data-i18n="formService">Sent using</span> <a href="https://formsubmit.co/" target="_blank" rel="noopener noreferrer">FormSubmit</a>.</p>
+          <p class="form-alternative"><a id="contact-email-link" href="mailto:info@iamaicrawl.com" data-i18n="emailAlternative">Or send an email directly</a></p>
         </form>
       </section>
     </main>
     <footer class="site-footer wrap">
       <a href="#home" data-i18n-aria="homeLabel" aria-label="IAMAI home"><img src="%BASE_URL%logo.svg?v=4" width="84" height="28" alt="IAMAI" /></a>
+      <a class="impressum-link" href="#impressum" lang="de">Impressum</a>
       <a href="#home"><span data-i18n="backTop">Back to top</span><span aria-hidden="true">↑</span></a>
     </footer>
     <script type="module" src="/src/main.ts"></script>
