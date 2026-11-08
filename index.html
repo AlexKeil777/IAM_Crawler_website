@@ -14,7 +14,8 @@
   </head>
   <body>
     <a class="skip-link" href="#main" data-i18n="skipLink">Skip to content</a>
-    <header class="site-header wrap">
+    <header class="header-bar">
+      <div class="site-header wrap">
       <a class="brand" href="#home" data-i18n-aria="homeLabel" aria-label="IAMAI home">
         <img src="%BASE_URL%logo.svg?v=4" width="108" height="36" alt="IAMAI" />
       </a>
@@ -39,6 +40,7 @@
         <a href="#explanation" data-i18n="navCrawler">The crawler</a>
         <a href="#contact" data-i18n="navContact">Contact</a>
       </nav>
+      </div>
     </header>
     <main id="main">
       <section class="hero wrap" id="home" aria-labelledby="hero-title">
@@ -139,7 +141,6 @@
           <input type="hidden" name="_subject" data-i18n-value="formSubject" value="IAMAI website enquiry" />
           <input type="hidden" name="_template" value="table" />
           <input type="hidden" name="_url" value="https://iamaicrawl.com/" />
-          <input class="honeypot" type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
           <div class="form-row">
             <div class="form-field">
               <label for="contact-name" data-i18n="nameLabel">Name</label>
@@ -167,11 +168,6 @@
         </form>
       </section>
     </main>
-    <footer class="site-footer wrap">
-      <a href="#home" data-i18n-aria="homeLabel" aria-label="IAMAI home"><img src="%BASE_URL%logo.svg?v=4" width="84" height="28" alt="IAMAI" /></a>
-      <a class="impressum-link" href="#impressum" lang="de">Impressum</a>
-      <a href="#home"><span data-i18n="backTop">Back to top</span><span aria-hidden="true">↑</span></a>
-    </footer>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

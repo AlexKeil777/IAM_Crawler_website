@@ -76,7 +76,7 @@ const status = document.querySelector<HTMLElement>("#contact-status")!;
 const emailLink = document.querySelector<HTMLAnchorElement>("#contact-email-link")!;
 const sourceUrl = form.querySelector<HTMLInputElement>('[name="_url"]')!;
 const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[required], textarea[required]")];
-let statusKey: "errorStatus" | "validationRequired" | "validationEmail" | null = null;
+let statusKey: "validationRequired" | "validationEmail" | null = null;
 // Validate current values in the submit handler, including browser autofill.
 form.noValidate = true;
 sourceUrl.value = `${window.location.origin}${window.location.pathname}`;
@@ -121,14 +121,6 @@ form.addEventListener("submit", (event) => {
   fields.forEach(localizeValidity);
   if (!form.reportValidity()) {
     event.preventDefault();
-    return;
-  }
-  const data = new FormData(form);
-  if (data.get("_honey")) {
-    event.preventDefault();
-    statusKey = "errorStatus";
-    status.className = "error";
-    renderFormState();
     return;
   }
   sourceUrl.value = `${window.location.origin}${window.location.pathname}`;

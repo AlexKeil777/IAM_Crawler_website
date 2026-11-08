@@ -32,7 +32,7 @@ The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same
 
 1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between seven reference-inspired automotive parts every two seconds, each surrounded by three to six particle-drawn sample prices in mixed currencies. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
 2. A large illustrative customer quote, the market context, and the question “How much more expensive are we?”. The “Check out our method” button dissolves into fine particles, which condense into an interactive four-step diagram. Select any step to explore its role. The explanation also covers advanced AI validation, exclusion of invalid offers, and five challenges under “Why is Crawling so difficult”.
-3. A contact form addressed to `info@iamaicrawl.com`, a direct-email alternative, and an Impressum beside the form with a footer link.
+3. A contact form addressed to `info@iamaicrawl.com`, a direct-email alternative, and an Impressum beside the form.
 
 The hero uses two columns on desktop and stacks the logo, sculpture and text on smaller screens. The floating background figures have been removed. Purple accents are shared by the wordmark, particles, links, focus indicators and contact button.
 
@@ -40,11 +40,11 @@ The main wordmark opens with I, A and the left half of M, which stay unobstructe
 
 The header language selector offers DE, EN, IT and RU. Page copy, method details, metadata, accessible labels, form validation, verification instructions and the direct-email alternative follow the chosen language, which persists locally. English is the first-visit default. The English customer quote and market paragraphs are supplied marketing copy; the quote is visibly marked as illustrative.
 
-The header contains navigation and the language selector. Motion follows the device's reduced-motion preference, with offscreen rendering suspension, responsive layouts and accessible focus states. Copy is grounded in the sibling `IAM_Crawler` repository; see [the design and research notes](docs/design-direction.md).
+The header stays fixed at the top while scrolling and contains navigation and the language selector. Page spacing and anchor offsets keep content clear of the header on desktop and mobile. There is no bottom footer. Motion follows the device's reduced-motion preference, with offscreen rendering suspension, responsive layouts and accessible focus states. Copy is grounded in the sibling `IAM_Crawler` repository; see [the design and research notes](docs/design-direction.md).
 
 ## Contact form setup
 
-The form posts natively to `https://formsubmit.co/info@iamaicrawl.com`. FormSubmit's default CAPTCHA is enabled, and its page displays verification, activation instructions or rejection details. There is no AJAX request or local success message, reset or evaporation that could imply inbox delivery. Required fields are name, email and message; company is optional. Localized validation and a honeypot remain. The hidden `_url` defaults to the canonical website URL without JavaScript; JavaScript updates it to the current origin and path, excluding query parameters and fragments.
+The form posts natively to `https://formsubmit.co/info@iamaicrawl.com`. FormSubmit's default CAPTCHA is enabled, and its page displays verification, activation instructions or rejection details. There is no AJAX request or local success message, reset or evaporation that could imply inbox delivery. Required fields are name, email and message; company is optional. Validation is localized. There is no honeypot field: browser autofill could populate the hidden text input and block legitimate submissions before they reached FormSubmit. CAPTCHA provides spam protection. The hidden `_url` defaults to the canonical website URL without JavaScript; JavaScript updates it to the current origin and path, excluding query parameters and fragments.
 
 The direct-email link opens the visitor's mail app addressed to `info@iamaicrawl.com`, with the translated subject and current name, email, company and message URI-encoded into the draft. Without JavaScript, it still opens a draft addressed to the mailbox. Verification instructions and link text are translated into all four languages.
 

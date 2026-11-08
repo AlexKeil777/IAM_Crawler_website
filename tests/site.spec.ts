@@ -2,7 +2,6 @@
 import AxeBuilder from "@axe-core/playwright";
 
 const endpoint = "https://formsubmit.co/info@iamaicrawl.com";
-const rejectedStatus = "Message could not be sent. Your message is still in the form. Please try again.";
 const verificationPage = "<!doctype html><title>Form verification</title><h1>Complete form verification</h1>";
 
 // Never send real contact emails during automated browser checks.
@@ -194,7 +193,7 @@ test("contact form uses a native POST with CAPTCHA and shows provider verificati
   expect(payload.get("message")?.replace(/\r\n/g, "\n")).toBe(message);
   expect(payload.get("_url")).toBe(source.origin + source.pathname);
   expect(payload.get("_subject")).toBe("IAMAI website enquiry");
-  expect(payload.get("_honey")).toBe("");
+  expect(payload.has("_honey")).toBe(false);
   expect(payload.get("_captcha")).not.toBe("false");
 });
 
@@ -278,15 +277,23 @@ test("direct email includes the complete form text without sending it through Fo
   expect(providerRequests).toBe(0);
 });
 
-test("the honeypot blocks contact delivery", async ({ page }) => {
+test("contact submission survives autofill of text fields", async ({ page }) => {
   let attempts = 0;
-  await page.route(endpoint, (route) => { attempts++; return route.abort(); });
+  await page.route(endpoint, (route) => {
+    attempts++;
+    return route.fulfill({ status: 200, contentType: "text/html", body: verificationPage });
+  });
   await page.goto("./");
   await fillContact(page);
-  await page.locator('#contact-form [name="_honey"]').evaluate((field: HTMLInputElement) => { field.value = "spam"; });
+  // Some autofill tools fill text inputs even when they are visually hidden
+  // and autocomplete is off. A real enquiry must still reach verification.
+  await page.locator('#contact-form input[type="text"]').evaluateAll((fields: HTMLInputElement[]) => {
+    fields.forEach((field) => { field.value = "Autofilled contact"; });
+  });
   await page.locator('#contact-form button[type="submit"]').click();
-  await expect(page.locator("#contact-status")).toHaveText(rejectedStatus);
-  expect(attempts).toBe(0);
+  await expect(page).toHaveURL(endpoint);
+  await expect(page.getByRole("heading", { name: "Complete form verification" })).toBeVisible();
+  expect(attempts).toBe(1);
 });
 
 test("motion follows the device preference without a header control or stored override", async ({
