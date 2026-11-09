@@ -111,6 +111,11 @@ export function initInlineContact(form: HTMLFormElement, report: Report): {
       return;
     }
     const data = new FormData(form);
+    const submittedFields = ["name", "email", "company", "message"]
+      .map((name) => form.elements.namedItem(name))
+      .filter((field): field is HTMLInputElement | HTMLTextAreaElement =>
+        field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement)
+      .map((field) => ({ field, value: field.value }));
     const payload = {
       access_key: accessKey,
       name: data.get("name"), email: data.get("email"), company: data.get("company"),
@@ -136,6 +141,12 @@ export function initInlineContact(form: HTMLFormElement, report: Report): {
       }
       const result = await response.json().catch(() => null);
       if (response.ok && result?.success === true) {
+        // Clear the submitted values, preserving any new text entered while
+        // the request was pending. Failed requests keep the entire draft.
+        submittedFields.forEach(({ field, value }) => {
+          if (field.value === value) field.value = "";
+        });
+        form.dispatchEvent(new Event("input", { bubbles: true }));
         report("submittedStatus", "success");
       } else {
         const detail = typeof result?.message === "string" ? result.message.slice(0, 300) : undefined;
@@ -146,8 +157,7 @@ export function initInlineContact(form: HTMLFormElement, report: Report): {
       report("deliveryUnknownStatus", "error");
     } finally {
       window.clearTimeout(timeout);
-      // Reset tokens after requests without clearing the visitor's message or
-      // letting an expiry callback overwrite the submission result.
+      // Reset tokens without letting expiry overwrite the submission result.
       solved = false;
       try { if (widget !== undefined) api?.reset(widget); } catch { captchaFailed = true; }
       sending = false;

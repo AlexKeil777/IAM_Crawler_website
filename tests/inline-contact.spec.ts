@@ -112,6 +112,8 @@ test("inline CAPTCHA is required, expires, and follows the selected language", a
 });
 
 test("inline submission keeps visitors on the page and sends the verified Unicode enquiry once", async ({ page }) => {
+  const clockStart = new Date("2026-11-08T12:00:00Z");
+  await page.clock.install({ time: clockStart });
   let attempts = 0;
   let payload: Record<string, unknown> = {};
   let release!: () => void;
@@ -139,6 +141,7 @@ test("inline submission keeps visitors on the page and sends the verified Unicod
   await expect(page.locator("#contact-status")).toHaveText("Sending…");
   await page.locator("#contact-form").evaluate((form: HTMLFormElement) => form.requestSubmit());
   expect(attempts).toBe(1);
+  await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 1000));
   release();
   await expect(page.locator("#contact-status")).toHaveText("Thank you. Your message has been submitted.");
   await expect(submit).toBeEnabled();
@@ -152,8 +155,21 @@ test("inline submission keeps visitors on the page and sends the verified Unicod
   expect(payload.message).toBe("Please compare A&B = 20% cheaper.\nПривет");
   expect(payload).not.toHaveProperty("_honey");
   expect(payload).not.toHaveProperty("_next");
-  await expect(page.locator("#contact-message")).toHaveValue(String(payload.message));
+  for (const field of ["name", "email", "company", "message"]) {
+    await expect(page.locator(`#contact-${field}`)).toHaveValue("");
+  }
+  const emailDraft = new URL((await page.locator("#contact-email-link").getAttribute("href"))!);
+  expect(emailDraft.searchParams.get("body")).not.toContain(String(payload.name));
+  expect(emailDraft.searchParams.get("body")).not.toContain(String(payload.email));
+  expect(emailDraft.searchParams.get("body")).not.toContain(String(payload.company));
+  expect(emailDraft.searchParams.get("body")).not.toContain(String(payload.message));
   await expect(page.getByRole("checkbox", { name: "Complete CAPTCHA" })).not.toBeChecked();
+  await page.clock.fastForward(999);
+  await expect(page.locator("#contact-status")).toHaveText("Thank you. Your message has been submitted.");
+  await page.clock.fastForward(1);
+  await expect(page.locator("#contact-status")).toBeEmpty();
+  await page.locator("#language-selector").selectOption("de");
+  await expect(page.locator("#contact-status")).toBeEmpty();
 });
 
 test("a rejected inline token preserves the message and permits a fresh verified retry", async ({ page }) => {
@@ -175,6 +191,9 @@ test("a rejected inline token preserves the message and permits a fresh verified
   await submit.click();
   await expect(page.locator("#contact-status")).toContainText("Your message was not accepted. Please try again or email us directly.");
   await expect(page.locator("#contact-status")).toContainText("Captcha verification failed");
+  await expect(page.locator("#contact-name")).toHaveValue("Müller & Partners");
+  await expect(page.locator("#contact-email")).toHaveValue("analyst@example.com");
+  await expect(page.locator("#contact-company")).toHaveValue("R&D + Europe");
   await expect(page.locator("#contact-message")).toHaveValue("Please compare A&B = 20% cheaper.\nПривет");
   await submit.click();
   await expect(page.locator("#contact-status")).toHaveText("Please complete the CAPTCHA.");
@@ -184,6 +203,40 @@ test("a rejected inline token preserves the message and permits a fresh verified
   await expect(page.locator("#contact-status")).toHaveText("Thank you. Your message has been submitted.");
   expect(tokens).toHaveLength(2);
   expect(tokens[1]).not.toBe(tokens[0]);
+  for (const field of ["name", "email", "company", "message"]) {
+    await expect(page.locator(`#contact-${field}`)).toHaveValue("");
+  }
+});
+
+test("success keeps fresh edits and its timer cannot hide a newer validation error", async ({ page }) => {
+  const clockStart = new Date("2026-11-08T12:00:00Z");
+  await page.clock.install({ time: clockStart });
+  let release!: () => void;
+  const pending = new Promise<void>((resolve) => { release = resolve; });
+  await page.route(endpoint, async (route) => {
+    await pending;
+    return route.fulfill({ contentType: "application/json", body: JSON.stringify({ success: true }) });
+  });
+  await page.goto("./");
+  await fillContact(page);
+  await solveCaptcha(page);
+  const submit = page.locator('#contact-form button[type="submit"]');
+  await submit.click();
+  await expect(submit).toBeDisabled();
+  await page.locator("#contact-company").fill("New company for the next enquiry");
+  await page.locator("#contact-message").fill("New message written while the previous request was sending");
+  await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now()) + 1000));
+  release();
+  await expect(page.locator("#contact-status")).toHaveText("Thank you. Your message has been submitted.");
+  await expect(submit).toBeEnabled();
+  await expect(page.locator("#contact-name")).toHaveValue("");
+  await expect(page.locator("#contact-email")).toHaveValue("");
+  await expect(page.locator("#contact-company")).toHaveValue("New company for the next enquiry");
+  await expect(page.locator("#contact-message")).toHaveValue("New message written while the previous request was sending");
+  await submit.click();
+  await expect(page.locator("#contact-status")).toHaveText("Please complete this field.");
+  await page.clock.fastForward(1000);
+  await expect(page.locator("#contact-status")).toHaveText("Please complete this field.");
 });
 
 test("a blocked inline CAPTCHA keeps the draft and direct email available", async ({ page }) => {

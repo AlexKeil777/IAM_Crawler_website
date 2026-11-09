@@ -78,8 +78,10 @@ const emailLink = document.querySelector<HTMLAnchorElement>("#contact-email-link
 const sourceUrl = form.querySelector<HTMLInputElement>('[name="_url"]')!;
 const returnUrl = form.querySelector<HTMLInputElement>('[name="_next"]')!;
 const fields = [...form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input[required], textarea[required]")];
-let statusKey: InlineStatusKey | "validationRequired" | "validationEmail" | null = null;
+type FormStatusKey = InlineStatusKey | "validationRequired" | "validationEmail";
+let statusKey: FormStatusKey | null = null;
 let statusDetail = "";
+let successTimeout: number | undefined;
 // Validate current values in the submit handler, including browser autofill.
 form.noValidate = true;
 function updateFormUrls() {
@@ -92,8 +94,7 @@ updateFormUrls();
 // thank-you message, not evidence of inbox delivery; don't reset any fields.
 const pageUrl = new URL(window.location.href);
 if (pageUrl.searchParams.get("contact") === "submitted") {
-  statusKey = "submittedStatus";
-  status.className = "success";
+  setFormStatus("submittedStatus", "success");
   pageUrl.searchParams.delete("contact");
   window.history.replaceState(window.history.state, "", pageUrl);
 }
@@ -107,15 +108,23 @@ function localizeValidity(field: HTMLInputElement | HTMLTextAreaElement) {
 fields.forEach((field) => {
   field.addEventListener("invalid", () => {
     localizeValidity(field);
-    statusKey = field.validity.typeMismatch ? "validationEmail" : "validationRequired";
-    statusDetail = "";
-    status.className = "error";
-    renderFormState();
+    setFormStatus(field.validity.typeMismatch ? "validationEmail" : "validationRequired", "error");
   });
   field.addEventListener("input", () => localizeValidity(field));
 });
 function renderFormState() {
   status.textContent = statusKey ? [t(statusKey), statusDetail].filter(Boolean).join(" ") : "";
+}
+function setFormStatus(key: FormStatusKey | null, kind: "success" | "error" | "" = "", detail = "") {
+  window.clearTimeout(successTimeout);
+  successTimeout = undefined;
+  statusKey = key;
+  statusDetail = detail;
+  status.className = kind;
+  renderFormState();
+  if (key === "submittedStatus") {
+    successTimeout = window.setTimeout(() => setFormStatus(null), 1000);
+  }
 }
 
 // Visitors can use their mail app if the delivery service rejects a submission.
@@ -136,12 +145,7 @@ form.addEventListener("input", updateEmailLink);
 emailLink.addEventListener("click", updateEmailLink);
 updateEmailLink();
 
-const inlineContact = initInlineContact(form, (key, kind, detail = "") => {
-  statusKey = key;
-  statusDetail = detail;
-  status.className = kind;
-  renderFormState();
-});
+const inlineContact = initInlineContact(form, setFormStatus);
 
 form.addEventListener("submit", (event) => {
   if (inlineContact) event.preventDefault();
@@ -155,10 +159,7 @@ form.addEventListener("submit", (event) => {
     void inlineContact.submit();
     return;
   }
-  statusKey = null;
-  statusDetail = "";
-  status.className = "";
-  renderFormState();
+  setFormStatus(null);
   // Keep the native POST for CAPTCHA, activation and rejection details. The
   // provider uses _next to return here instead of showing its thank-you page.
 });
