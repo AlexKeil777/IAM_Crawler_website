@@ -34,6 +34,15 @@ jobs:
         run: npm run build
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+      - name: Verify GitHub Pages publishing source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          build_type="$(gh api "repos/$GITHUB_REPOSITORY/pages" --jq '.build_type')"
+          if [ "$build_type" != "workflow" ]; then
+            echo "::error::GitHub Pages is publishing unbuilt source ($build_type). Set Settings > Pages > Build and deployment > Source to GitHub Actions."
+            exit 1
+          fi
       - name: Upload built website
         uses: actions/upload-pages-artifact@v3
         with:
@@ -41,3 +50,7 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+      - name: Verify the live production files
+        env:
+          DEPLOYMENT_URL: ${{ steps.deployment.outputs.page_url }}
+        run: npm run verify:deployment -- "$DEPLOYMENT_URL"

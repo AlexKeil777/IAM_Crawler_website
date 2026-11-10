@@ -26,7 +26,13 @@ The production build is in `dist/`. Its relative asset URLs work both at the dom
 
 `.github/workflows/deploy.yml` installs the locked dependencies, builds the site and deploys **only `dist/`** whenever `main` is pushed. Repository Settings → Pages → Source must be **GitHub Actions**. Publishing the repository root directly serves unbuilt TypeScript and misses the CSS that Vite normally imports; it will not look like the local development site.
 
-The live address is https://alexkeil777.github.io/IAM_Crawler_website/. The same source produces the local and hosted versions. Vite's relative base and base-aware font, icon and download URLs keep every asset inside the project URL.
+The live address is https://iamaicrawl.com/. The same source produces the local and hosted versions. Vite's relative base and base-aware font, icon and download URLs keep every asset inside the project URL.
+
+The deployment workflow checks that Pages is still configured for GitHub Actions and fails with instructions if branch publishing has been enabled. After deployment, it checks the public URL against the current `dist/index.html` and verifies that the compiled JavaScript and CSS load with the correct contents and MIME types. This catches source files being published accidentally and stale or incomplete deployments. The live check retries briefly while the CDN updates. To run it manually after a build:
+
+```sh
+npm run verify:deployment -- https://iamaicrawl.com/
+```
 
 ## Three sections
 
