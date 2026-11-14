@@ -69,8 +69,11 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   const plane = logo.locator(".logo-mirror-plane");
   const housing = logo.locator(".logo-mirror-housing");
   const reflection = mirror.locator(".logo-reflection");
-  const warning = mirror.locator(".logo-mirror-sheen .logo-mirror-warning");
+  const crawl = logo.locator(".logo-crawl");
   await expect(logo).toHaveAttribute("data-phase", "dropping");
+  await expect(mirror.locator("text")).toHaveCount(0);
+  await expect(crawl).toHaveText("Crawl");
+  await expect(crawl).toHaveCSS("opacity", "0");
   const initialDrop = await mirror.getAttribute("transform");
   const initialProjection = await source.getAttribute("transform");
   await expect(logo.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
@@ -102,6 +105,7 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
     }
   }
   await expect(logo).toHaveAttribute("data-phase", "dropping");
+  await expect(crawl).toHaveCSS("opacity", "0");
   await expect(reflection).toHaveAttribute("opacity", "0");
   expect(await plane.evaluate((element) => (element as SVGGElement).transform.baseVal.consolidate()!.matrix.a)).toBe(0);
   expect(await mirror.getAttribute("transform")).not.toBe(initialDrop);
@@ -123,11 +127,13 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   expect(landedPosition).toBe("translate(0 0)");
   await page.clock.runFor(200);
   await expect(logo).toHaveAttribute("data-phase", "turning");
+  await expect(crawl).toHaveCSS("opacity", "0");
   // The glass starts exposing the reflection in the first 100 ms of its turn.
   expect(await reflection.evaluate((element) => Number(element.getAttribute("opacity")))).toBeGreaterThan(0);
   expect(await plane.evaluate((element) => (element as SVGGElement).transform.baseVal.consolidate()!.matrix.a)).toBeGreaterThan(0);
   const turningProjection = await source.getAttribute("transform");
   await page.clock.runFor(600);
+  await expect(crawl).toHaveCSS("opacity", "0");
   expect(await mirror.getAttribute("transform")).toBe(landedPosition);
   expect(await source.getAttribute("transform")).not.toBe(turningProjection);
   expect(await virtual.getAttribute("transform")).toBe(await source.getAttribute("transform"));
@@ -142,14 +148,15 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   const glass = (await plane.boundingBox())!;
   expect(glass.width).toBeGreaterThan(60);
   expect(glass.height).toBeGreaterThan(70);
-  await expect(warning).toHaveText("Crawl");
   expect(await mirror.locator(".logo-mirror-sheen").getAttribute("transform")).toBe(await plane.getAttribute("transform"));
-  const warningBounds = await warning.evaluate((element) => {
-    const bounds = (element as SVGGraphicsElement).getBBox();
-    return { top: bounds.y, bottom: bounds.y + bounds.height };
-  });
-  expect(warningBounds.top).toBeGreaterThan(96);
-  expect(warningBounds.bottom).toBeLessThan(140);
+  await page.clock.runFor(200);
+  await expect.poll(async () => Number(await crawl.evaluate((element) => getComputedStyle(element).opacity))).toBeGreaterThan(0);
+  expect(Number(await crawl.evaluate((element) => getComputedStyle(element).opacity))).toBeLessThan(.65);
+  await page.clock.runFor(700);
+  await expect(crawl).toHaveCSS("opacity", "0.65");
+  const crawlBounds = (await crawl.boundingBox())!;
+  const mirrorBounds = (await mirror.boundingBox())!;
+  expect(crawlBounds.x).toBeGreaterThan(mirrorBounds.x + mirrorBounds.width);
   expect(await mirror.locator("path").evaluateAll((paths) => paths.every((path) => {
     const data = path.getAttribute("d") || "";
     return data.length > 0 && !/NaN|Infinity/.test(data)
@@ -158,16 +165,20 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   const finishedProjection = await source.getAttribute("transform");
   await page.clock.fastForward(10000);
   await expect(mirror).toHaveCSS("opacity", "1");
+  await expect(crawl).toHaveCSS("opacity", "0.65");
   expect(await mirror.getAttribute("transform")).toBe(landedPosition);
   expect(await source.getAttribute("transform")).toBe(finishedProjection);
 });
 
 test("reduced motion immediately completes the logo reflection, including a live preference change", async ({ page }) => {
+  const crawl = page.locator(".logo-crawl");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("./");
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
   await expect(page.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
   await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "1");
+  await expect(page.locator(".logo-mirror text")).toHaveCount(0);
+  await expect(crawl).toHaveCSS("opacity", "0.65");
   const completedProjection = await page.locator(".logo-source").getAttribute("transform");
   const completedHousing = await page.locator(".logo-mirror-housing path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d")));
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -176,25 +187,32 @@ test("reduced motion immediately completes the logo reflection, including a live
   await page.clock.pauseAt(new Date(start.getTime() + 100));
   await page.reload();
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "dropping");
+  await expect(crawl).toHaveCSS("opacity", "0");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
   await expect(page.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
   await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "1");
+  await expect(crawl).toHaveCSS("opacity", "0.65");
   expect(await page.locator(".logo-source").getAttribute("transform")).toBe(completedProjection);
   expect(await page.locator(".logo-mirror-housing path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d")))).toEqual(completedHousing);
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.clock.fastForward(6000);
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
   await expect(page.locator(".logo-mirror")).toHaveCSS("opacity", "1");
+  await expect(crawl).toHaveCSS("opacity", "0.65");
   expect(await page.locator(".logo-source").getAttribute("transform")).toBe(completedProjection);
   for (const width of [320, 390, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");
+    await expect(crawl).toHaveCSS("opacity", "0.65");
     expect(await page.locator(".logo-source").getAttribute("transform")).toBe(completedProjection);
     expect(await page.locator(".logo-mirror-housing path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d")))).toEqual(completedHousing);
     const bounds = (await page.locator(".logo-mirror").boundingBox())!;
     expect(bounds.x).toBeGreaterThanOrEqual(0);
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+    const crawlBounds = (await crawl.boundingBox())!;
+    expect(crawlBounds.x).toBeGreaterThan(bounds.x + bounds.width);
+    expect(crawlBounds.x + crawlBounds.width).toBeLessThanOrEqual(width);
     expect(await page.locator(".logo-mirror-clip").getAttribute("transform")).toBe(await page.locator(".logo-mirror-plane").getAttribute("transform"));
   }
 });
