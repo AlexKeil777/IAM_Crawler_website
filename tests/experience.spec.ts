@@ -142,7 +142,7 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   const glass = (await plane.boundingBox())!;
   expect(glass.width).toBeGreaterThan(60);
   expect(glass.height).toBeGreaterThan(70);
-  await expect(warning).toHaveText("Objects in mirrors are closer than they appear");
+  await expect(warning).toHaveText("Crawl");
   expect(await mirror.locator(".logo-mirror-sheen").getAttribute("transform")).toBe(await plane.getAttribute("transform"));
   const warningBounds = await warning.evaluate((element) => {
     const bounds = (element as SVGGraphicsElement).getBBox();

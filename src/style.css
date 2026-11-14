@@ -83,8 +83,9 @@ p { color: var(--muted); }
   position: relative;
   z-index: 5;
 }
-.brand { display: grid; place-items: center; width: 108px; height: 36px; flex-shrink: 0; }
+.brand { display: flex; align-items: center; height: 36px; flex-shrink: 0; }
 .brand img { display: block; width: 108px; height: 36px; }
+.brand-crawl { font-size: 26px; font-weight: 500; line-height: 1; letter-spacing: -0.045em; opacity: .65; }
 .desktop-nav { display: flex; gap: 32px; margin-left: auto; margin-right: 38px; }
 .desktop-nav a { font-size: 12px; color: var(--muted); transition: color 0.3s; }
 .desktop-nav a:hover { color: var(--ink); }
@@ -302,7 +303,9 @@ p { color: var(--muted); }
 @media (max-width: 620px) {
   :root { --header-height: 80px; }
   .wrap { width: calc(100% - 44px); }
-  .brand, .brand img { width: 96px; height: 32px; }
+  .brand { height: 32px; }
+  .brand img { width: 96px; height: 32px; }
+  .brand-crawl { font-size: 23px; }
   .desktop-nav { display: none; }
   .header-actions { margin-left: auto; gap: 8px; }
   .menu-toggle { display: flex; flex-direction: column; justify-content: center; gap: 6px; width: 44px; height: 44px; padding: 11px; border: 0; background: none; }
