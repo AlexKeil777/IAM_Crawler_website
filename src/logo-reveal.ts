@@ -1,13 +1,26 @@
 import { SideMirror } from "./side-mirror";
 
-const dropDistance = 280;
 const dropDuration = 1.8;
+const fallDuration = 1.1;
 const turnStart = dropDuration + .2;
 const turnDuration = 1.6;
 
 const smooth = (value: number) => {
   const n = Math.max(0, Math.min(1, value));
   return n * n * (3 - 2 * n);
+};
+
+/**
+ * Offset from the resting position, positive below it. The mirror falls under
+ * gravity with some entry speed, then its mount takes up the weight like a
+ * stiff damped spring: one small sag, a smaller rebound, and rest.
+ */
+const descent = (elapsed: number, height: number) => {
+  if (elapsed >= dropDuration) return 0;
+  const fall = elapsed / fallDuration;
+  if (fall < 1) return -height * (1 - fall * (.25 + .75 * fall));
+  const settle = elapsed - fallDuration;
+  return 22 * Math.exp(-8 * settle) * Math.sin(20 * settle);
 };
 
 /** A complete car side mirror descends, then turns its glass toward the viewer. */
@@ -25,12 +38,17 @@ export class LogoReveal {
   private frame = 0;
   private finished = false;
   private started = performance.now();
+  private dropDistance = 280;
 
   constructor(paused: boolean) {
     if (paused || document.hidden) this.finish();
     else {
+      // Start above the viewport so the mirror falls into view from behind
+      // the header instead of appearing in mid-air.
+      const box = this.element.getBoundingClientRect();
+      if (box.width) this.dropDistance = Math.max(280, 250 + box.top * 620 / box.width);
       this.element.dataset.phase = "dropping";
-      this.render(0, -dropDistance);
+      this.render(0, -this.dropDistance);
       this.frame = requestAnimationFrame((time) => this.draw(time));
     }
     document.addEventListener("visibilitychange", () => { if (document.hidden) this.finish(); });
@@ -45,7 +63,7 @@ export class LogoReveal {
     this.element.dataset.phase = "complete";
   }
 
-  private render(turn: number, drop: number) {
+  private render(turn: number, drop: number, tilt = 0) {
     // Glass faces exactly left during descent, edge-on to the viewer. Any
     // positive turn opens the glass immediately toward the lettering's camera.
     const yaw = turn * 28 * Math.PI / 180;
@@ -62,7 +80,8 @@ export class LogoReveal {
     this.plane.setAttribute("transform", surface);
     this.sheen.setAttribute("transform", surface);
     this.glass.setAttribute("transform", surface);
-    this.mirror.setAttribute("transform", `translate(0 ${drop})`);
+    // The head nods about its door mount (edge-on at 159, 155) as it settles.
+    this.mirror.setAttribute("transform", `translate(0 ${drop})${tilt ? ` rotate(${tilt} 159 155)` : ""}`);
     this.assembly.render(mirrorYaw, pitch);
     // Projection alone reveals the reflection as soon as the glass turns.
     // Hide the exactly edge-on surface, including its strokes, on descent.
@@ -76,9 +95,10 @@ export class LogoReveal {
   private draw(time: number) {
     if (this.finished) return;
     const elapsed = (time - this.started) / 1000;
-    const drop = smooth(elapsed / dropDuration);
+    const drop = descent(elapsed, this.dropDistance);
     const turn = smooth((elapsed - turnStart) / turnDuration);
-    this.render(turn, -dropDistance * (1 - drop));
+    // Once landed, the head's inertia follows the sag and rebound.
+    this.render(turn, drop, elapsed > fallDuration ? drop * .15 : 0);
     this.element.dataset.phase = elapsed < turnStart ? "dropping" : "turning";
     if (elapsed >= turnStart + turnDuration) this.finish();
     else this.frame = requestAnimationFrame((next) => this.draw(next));

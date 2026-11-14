@@ -100,6 +100,8 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   for (const time of [900, 1200, 1500]) {
     await page.clock.runFor(time - elapsed);
     elapsed = time;
+    // Just after the fall, the mount sags below its resting position.
+    if (time === 1200) expect(await mirror.getAttribute("transform")).toMatch(/^translate\(0 [1-9]/);
     for (const [index, probe] of probes.entries()) {
       expect((await page.screenshot({ clip: probe.clip })).equals(originalLetters[index]), `${probe.name} stays unobstructed at ${time} ms`).toBe(true);
     }
