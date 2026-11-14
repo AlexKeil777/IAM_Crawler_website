@@ -46,7 +46,8 @@ export class SideMirror {
   private lastPitch = NaN;
   private finish: SVGRadialGradientElement;
   private keyLight = unit({ x: -.65, y: -.9, z: .65 });
-  private fillLight = unit({ x: .8, y: -.3, z: -.4 });
+  // The fill comes from the viewer's side so the mount reads as a rounded form.
+  private fillLight = unit({ x: -.35, y: -.45, z: -.82 });
 
   constructor(private housing: SVGGElement) {
     this.housing.replaceChildren();
@@ -73,39 +74,48 @@ export class SideMirror {
     });
     this.loft(shellRings, point(190, 61, 24), "paint", "logo-mirror-cap");
 
-    const stalk = outline([61, 115], [
-      [[41, 127], [12, 150], [-12, 163]],
-      [[-29, 174], [-54, 180], [-64, 171]],
-      [[-75, 162], [-65, 152], [-49, 145]],
-      [[-22, 133], [3, 113], [27, 109]],
-      [[43, 107], [54, 110], [61, 115]],
+    // The door mount sits flat on the door, at right angles to the glass and
+    // inboard of it (negative u). Its outline is drawn in (depth, v): a sail
+    // panel with a tall rear edge, sloping down to a blunt nose at the front.
+    const sail = outline([-46, 116], [
+      [[-20, 121], [30, 145], [50, 158]],
+      [[60, 165], [66, 173], [64, 182]],
+      [[63, 188], [58, 190], [50, 190]],
+      [[20, 191], [-25, 191], [-44, 190]],
+      [[-52, 189], [-56, 184], [-56, 177]],
+      [[-57, 160], [-56, 142], [-55, 127]],
+      [[-54, 120], [-51, 116], [-46, 116]],
     ]);
-    this.extrude(stalk, -23, 39, [-4, 145], "logo-mirror-stalk");
-    const mount = outline([-116, 112], [
-      [[-113, 103], [-108, 105], [-100, 115]],
-      [[-83, 133], [-61, 154], [-53, 170]],
-      [[-45, 183], [-49, 193], [-64, 195]],
-      [[-78, 197], [-107, 195], [-116, 188]],
-      [[-125, 174], [-123, 128], [-116, 112]],
-    ]);
-    this.extrude(mount, -34, 26, [-88, 155], "logo-mirror-mount");
-  }
-
-  private extrude(shape: OutlinePoint[], depth: number, thickness: number, center: OutlinePoint, className: string) {
-    const rings = [[0, .9], [3, 1], [thickness - 3, 1], [thickness, .9]].map(([offset, scale]) =>
-      shape.map(([u, v]) => point(center[0] + (u - center[0]) * scale, center[1] + (v - center[1]) * scale, depth + offset)),
+    // A gasket lip, a flat rim, then a bevelled face toward the viewer.
+    const plate = [[-80, .96], [-77, 1], [-71, 1], [-66, .9]].map(([u, scale]) =>
+      sail.map(([depth, v]) => point(u, 160 + (v - 160) * scale, -4 + (depth + 4) * scale)),
     );
-    const origin = point(center[0], center[1], depth + thickness / 2);
-    this.loft(rings, origin, "plastic", className);
-    this.face(rings[0], origin, "plastic", className);
-    this.face(rings[rings.length - 1], origin, "plastic", className);
+    this.loft(plate, null, "plastic", "logo-mirror-mount");
+    this.face(plate[plate.length - 1], point(-73, 160, -4), "plastic", "logo-mirror-mount");
+
+    // One stout arm flares out of the plate, narrows to a waist and sweeps up
+    // into the underside of the cap, where it ends inside the shell.
+    const arm = Array.from({ length: 15 }, (_, index) => {
+      const t = index / 14, flare = (1 - t) ** 2, rise = t * t * (3 - 2 * t);
+      return Array.from({ length: 40 }, (_, step) => {
+        const angle = step / 40 * 2 * Math.PI;
+        return point(
+          -70 + 122 * t,
+          164 - 42 * rise + (19 + 2 * flare) * Math.sin(angle),
+          -4 + 28 * t + (18 + 16 * flare) * Math.cos(angle),
+        );
+      });
+    });
+    this.loft(arm, null, "plastic", "logo-mirror-stalk");
   }
 
-  private loft(rings: Point[][], origin: Point, material: Face["material"], className: string) {
+  /** Join consecutive rings; without an origin, each band faces away from its own axis. */
+  private loft(rings: Point[][], origin: Point | null, material: Face["material"], className: string) {
     for (let ring = 0; ring < rings.length - 1; ring++) {
+      const inside = origin ?? average([...rings[ring], ...rings[ring + 1]]);
       for (let i = 0; i < rings[ring].length; i++) {
         const next = (i + 1) % rings[ring].length;
-        this.face([rings[ring][i], rings[ring][next], rings[ring + 1][next], rings[ring + 1][i]], origin, material, className);
+        this.face([rings[ring][i], rings[ring][next], rings[ring + 1][next], rings[ring + 1][i]], inside, material, className);
       }
     }
   }
@@ -140,8 +150,9 @@ export class SideMirror {
       const visible = dot(face.normal, view) > 0;
       const diffuse = Math.max(0, dot(face.normal, this.keyLight));
       const fill = Math.max(0, dot(face.normal, this.fillLight));
-      const specular = Math.max(0, dot(face.normal, half)) ** (paint ? 28 : 12);
-      const brightness = (paint ? 24 : 16) + diffuse * (paint ? 87 : 38) + fill * 27 + specular * (paint ? 95 : 17);
+      const specular = Math.max(0, dot(face.normal, half)) ** 12;
+      // Satin black plastic; the painted cap takes its colour from the gradient below.
+      const brightness = 15 + diffuse * 34 + fill * 50 + specular * 24;
       // One continuous studio reflection gives the painted cap a smooth finish;
       // its silhouette, depth and occlusion still come from the curved 3D mesh.
       const color = paint ? "url(#mirror-cap-finish)" : `rgb(${Math.round(brightness * .92)} ${Math.round(brightness * .97)} ${Math.round(brightness * 1.08)})`;

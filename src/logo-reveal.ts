@@ -80,8 +80,8 @@ export class LogoReveal {
     this.plane.setAttribute("transform", surface);
     this.sheen.setAttribute("transform", surface);
     this.glass.setAttribute("transform", surface);
-    // The head nods about its door mount (edge-on at 159, 155) as it settles.
-    this.mirror.setAttribute("transform", `translate(0 ${drop})${tilt ? ` rotate(${tilt} 159 155)` : ""}`);
+    // The head nods about its door mount (edge-on at 176, 164) as it settles.
+    this.mirror.setAttribute("transform", `translate(0 ${drop})${tilt ? ` rotate(${tilt} 176 164)` : ""}`);
     this.assembly.render(mirrorYaw, pitch);
     // Projection alone reveals the reflection as soon as the glass turns.
     // Hide the exactly edge-on surface, including its strokes, on descent.

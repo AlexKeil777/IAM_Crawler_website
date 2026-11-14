@@ -1,0 +1,2 @@
+# One line-ending policy for every platform: LF in the repository and in the working tree.
+* text=auto eol=lf
