@@ -6,7 +6,7 @@ const endpoint = "https://formsubmit.co/info@iamaicrawl.com";
 
 const translations = {
   de: {
-    title: "IAMAI — Intelligentes IAM-Crawling", hero: "Effizient crawlen",
+    title: "IAMAI — Intelligentes IAM-Crawling", hero: "KI-gestütztes Crawling",
     question: "\"Wenn das Teil aus dem freien Ersatzteilmarkt nicht mindestens 20 % günstiger ist, kann ich genauso gut das Originalteil kaufen\"", quote: "Wow, das Originalteil ist viel zu teuer.",
     cta: "Entdecken Sie unsere Methode", method: "Unsere Methode", step: "Teil und Markt festlegen",
     contact: "Kontakt", message: "Nachricht", language: "Sprache",
@@ -14,7 +14,7 @@ const translations = {
     required: "Bitte füllen Sie dieses Feld aus.", invalidEmail: "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
   },
   en: {
-    title: "IAMAI — Intelligent IAM crawling", hero: "Crawl efficiently",
+    title: "IAMAI — Intelligent IAM crawling", hero: "AI-powered crawling",
     question: "\"If the aftermarket part is not at least 20% cheaper, i may as well buy the genuine part\"", quote: "Wow, the original part is far too expensive.",
     cta: "Check out our method", method: "Our method", step: "Define the part and market",
     contact: "Contact", message: "Message", language: "Language",
@@ -22,7 +22,7 @@ const translations = {
     required: "Please complete this field.", invalidEmail: "Please enter a valid email address.",
   },
   it: {
-    title: "IAMAI — Crawling intelligente per l'IAM", hero: "Esplora con efficienza",
+    title: "IAMAI — Crawling intelligente per l'IAM", hero: "Crawling con IA dei dati",
     question: "\"Se il ricambio aftermarket non costa almeno il 20% in meno, tanto vale comprare quello originale\"", quote: "Accidenti, il ricambio originale costa davvero troppo.",
     cta: "Scopri il nostro metodo", method: "Il nostro metodo", step: "Definire ricambio e mercato",
     contact: "Contatti", message: "Messaggio", language: "Lingua",
@@ -30,7 +30,7 @@ const translations = {
     required: "Compila questo campo.", invalidEmail: "Inserisci un indirizzo email valido.",
   },
   ru: {
-    title: "IAMAI — Интеллектуальный сбор данных об IAM", hero: "Собирайте эффективно",
+    title: "IAMAI — Интеллектуальный сбор данных об IAM", hero: "Сбор данных на базе ИИ",
     question: "\"Если неоригинальная запчасть не дешевле оригинальной хотя бы на 20 %, я могу с тем же успехом купить оригинальную\"", quote: "Ого, оригинальная запчасть слишком дорогая.",
     cta: "Познакомьтесь с нашим методом", method: "Наш метод", step: "Определить запчасть и рынок",
     contact: "Контакты", message: "Сообщение", language: "Язык",
@@ -55,7 +55,7 @@ async function openMethod(page: Page) {
   await expect(page.locator("#story-view")).toBeHidden();
 }
 
-test("the solid side mirror descends, rotates, and retains its clipped reflection", async ({ page }) => {
+test("the solid side mirror rotates in place and retains its clipped reflection", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   const start = new Date("2026-11-07T12:00:00Z");
   await page.clock.install({ time: start });
@@ -70,11 +70,13 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   const housing = logo.locator(".logo-mirror-housing");
   const reflection = mirror.locator(".logo-reflection");
   const crawl = logo.locator(".logo-crawl");
-  await expect(logo).toHaveAttribute("data-phase", "dropping");
+  await expect(logo).toHaveAttribute("data-phase", "turning");
   await expect(mirror.locator("text")).toHaveCount(0);
   await expect(crawl).toHaveText("Crawl");
   await expect(crawl).toHaveCSS("opacity", "0");
-  const initialDrop = await mirror.getAttribute("transform");
+  // The mirror never leaves its resting position.
+  const restingPosition = "translate(0 0)";
+  await expect(mirror).toHaveAttribute("transform", restingPosition);
   const initialProjection = await source.getAttribute("transform");
   await expect(logo.locator(".logo-reflection-mask")).toHaveAttribute("width", "180");
   await expect(reflection).toHaveAttribute("clip-path", "url(#mirror-surface)");
@@ -82,39 +84,11 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   await expect(reflection).toHaveAttribute("opacity", "0");
   expect(await plane.evaluate((element) => (element as SVGGElement).transform.baseVal.consolidate()!.matrix.a)).toBe(0);
 
-  // Keep actual painted strokes visible while the stalk and mount pass them.
-  const probes = await source.evaluate((element) => {
-    const camera = (element as SVGGElement).getScreenCTM()!;
-    return [
-      { name: "I", x: 25, y: 42, width: 6, height: 34 },
-      { name: "A", x: 61, y: 85, width: 3, height: 5 },
-      { name: "left half of M", x: 147, y: 48, width: 6, height: 36 },
-    ].map(({ name, x, y, width, height }) => {
-      const from = new DOMPoint(x, y).matrixTransform(camera);
-      const to = new DOMPoint(x + width, y + height).matrixTransform(camera);
-      return { name, clip: { x: from.x, y: from.y, width: to.x - from.x, height: to.y - from.y } };
-    });
-  });
-  const originalLetters = await Promise.all(probes.map(({ clip }) => page.screenshot({ clip })));
-  let elapsed = 0;
-  for (const time of [900, 1200, 1500]) {
-    await page.clock.runFor(time - elapsed);
-    elapsed = time;
-    // Just after the fall, the mount sags below its resting position.
-    if (time === 1200) expect(await mirror.getAttribute("transform")).toMatch(/^translate\(0 [1-9]/);
-    for (const [index, probe] of probes.entries()) {
-      expect((await page.screenshot({ clip: probe.clip })).equals(originalLetters[index]), `${probe.name} stays unobstructed at ${time} ms`).toBe(true);
-    }
-  }
-  await expect(logo).toHaveAttribute("data-phase", "dropping");
-  await expect(crawl).toHaveCSS("opacity", "0");
-  await expect(reflection).toHaveAttribute("opacity", "0");
-  expect(await plane.evaluate((element) => (element as SVGGElement).transform.baseVal.consolidate()!.matrix.a)).toBe(0);
-  expect(await mirror.getAttribute("transform")).not.toBe(initialDrop);
+  // Edge-on, the housing, arm and door mount are already in place.
   const shell = (await housing.boundingBox())!;
-  const descendingGlass = (await plane.boundingBox())!;
+  const edgeOnGlass = (await plane.boundingBox())!;
   expect(shell.width).toBeGreaterThan(20);
-  expect(shell.height).toBeGreaterThan(descendingGlass.height);
+  expect(shell.height).toBeGreaterThan(edgeOnGlass.height);
   const initialHousing = await housing.locator("path").evaluateAll((paths) => paths.map((path) => path.getAttribute("d")));
   expect(initialHousing.length).toBeGreaterThan(0);
   for (const component of [".logo-mirror-stalk", ".logo-mirror-mount"]) {
@@ -124,10 +98,7 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
     }))).toBe(true);
   }
 
-  await page.clock.runFor(400);
-  const landedPosition = await mirror.getAttribute("transform");
-  expect(landedPosition).toBe("translate(0 0)");
-  await page.clock.runFor(200);
+  await page.clock.runFor(600);
   await expect(logo).toHaveAttribute("data-phase", "turning");
   await expect(crawl).toHaveCSS("opacity", "0");
   // The glass starts exposing the reflection in the first 100 ms of its turn.
@@ -136,7 +107,7 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   const turningProjection = await source.getAttribute("transform");
   await page.clock.runFor(600);
   await expect(crawl).toHaveCSS("opacity", "0");
-  expect(await mirror.getAttribute("transform")).toBe(landedPosition);
+  expect(await mirror.getAttribute("transform")).toBe(restingPosition);
   expect(await source.getAttribute("transform")).not.toBe(turningProjection);
   expect(await virtual.getAttribute("transform")).toBe(await source.getAttribute("transform"));
   expect(await surface.getAttribute("transform")).toBe(await plane.getAttribute("transform"));
@@ -145,7 +116,7 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   await page.clock.runFor(1000);
   await expect(logo).toHaveAttribute("data-phase", "complete");
   await expect(mirror).toHaveCSS("opacity", "1");
-  expect(await mirror.getAttribute("transform")).toBe(landedPosition);
+  expect(await mirror.getAttribute("transform")).toBe(restingPosition);
   expect(await source.getAttribute("transform")).not.toBe(initialProjection);
   const glass = (await plane.boundingBox())!;
   expect(glass.width).toBeGreaterThan(60);
@@ -168,7 +139,7 @@ test("the solid side mirror descends, rotates, and retains its clipped reflectio
   await page.clock.fastForward(10000);
   await expect(mirror).toHaveCSS("opacity", "1");
   await expect(crawl).toHaveCSS("opacity", "0.65");
-  expect(await mirror.getAttribute("transform")).toBe(landedPosition);
+  expect(await mirror.getAttribute("transform")).toBe(restingPosition);
   expect(await source.getAttribute("transform")).toBe(finishedProjection);
 });
 
@@ -188,7 +159,7 @@ test("reduced motion immediately completes the logo reflection, including a live
   await page.clock.install({ time: start });
   await page.clock.pauseAt(new Date(start.getTime() + 100));
   await page.reload();
-  await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "dropping");
+  await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "turning");
   await expect(crawl).toHaveCSS("opacity", "0");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(page.locator("#logo-reveal")).toHaveAttribute("data-phase", "complete");

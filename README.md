@@ -36,13 +36,13 @@ npm run verify:deployment -- https://iamaicrawl.com/
 
 ## Three sections
 
-1. A symmetric geometric IAMAI wordmark with a purple central M, the lines “Crawl efficiently”, “Crawl reliably”, “Crawl flexibly” and “Crawl intelligently”, and a cursor-reactive particle sculpture that transforms between seven reference-inspired automotive parts every two seconds, each surrounded by three to six particle-drawn sample prices in mixed currencies. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
+1. A symmetric geometric IAMAI wordmark with a purple central M, the headline “AI-powered crawling of automotive pricing data” set on two lines, and a cursor-reactive particle sculpture that transforms between seven reference-inspired automotive parts every two seconds, each surrounded by three to six particle-drawn sample prices in mixed currencies. Each headline line assembles from fine particles before fading into real text. Reduced motion shows the finished text immediately and keeps the sculpture still.
 2. A large illustrative customer quote, the market context, and the question “How much more expensive are we?”. The “Check out our method” button dissolves into fine particles, which condense into an interactive four-step diagram. Select any step to explore its role. The explanation also covers advanced AI validation, exclusion of invalid offers, and five challenges under “Why is Crawling so difficult”.
 3. A contact form addressed to `info@iamaicrawl.com`, a direct-email alternative, and an Impressum beside the form.
 
 The hero uses two columns on desktop and stacks the logo, sculpture and text on smaller screens. The floating background figures have been removed. Purple accents are shared by the wordmark, particles, links, focus indicators and contact button.
 
-The main wordmark opens with I, A and the left half of M, which stay unobstructed as a complete three-dimensional car side mirror descends over 1.8 seconds. Its glass faces exactly left during descent, showing the edge of the curved graphite housing, a rounded arm and a sail-shaped door mount. After a 0.2-second pause, the mirror rotates over 1.6 seconds as the lettering turns; the reflected half starts appearing inside the glass as soon as rotation begins. Once the mirror finishes turning, a separate “Crawl” inscription fades in over 0.7 seconds to the right of the mirror at 65% opacity. The mirror glass has no caption. The housing and mounting components are projected from solid 3D geometry, so their depth and shading change throughout the turn. The mirror stays in place after the reveal. Paused or reduced motion shows this final arrangement immediately.
+The main wordmark opens with I, A and the left half of M, beside a complete three-dimensional car side mirror that is in place from the start. Its glass first faces exactly left, showing the edge of the curved graphite housing, a rounded arm and a sail-shaped door mount. After a 0.5-second pause, the mirror rotates over 1.6 seconds as the lettering turns; the reflected half starts appearing inside the glass as soon as rotation begins. Once the mirror finishes turning, a separate “Crawl” inscription fades in over 0.7 seconds to the right of the mirror at 65% opacity. The mirror glass has no caption. The housing and mounting components are projected from solid 3D geometry, so their depth and shading change throughout the turn. The mirror stays in place after the reveal. Paused or reduced motion shows this final arrangement immediately.
 
 The header language selector offers DE, EN, IT and RU. Page copy, method details, metadata, accessible labels, form validation, verification instructions and the direct-email alternative follow the chosen language, which persists locally. English is the first-visit default. The English customer quote and market paragraphs are supplied marketing copy; the quote is visibly marked as illustrative.
 
@@ -58,7 +58,7 @@ The native FormSubmit action is a fallback only when JavaScript is disabled or `
 
 The direct-email link opens the visitor's mail app addressed to `info@iamaicrawl.com`, with the translated subject and current name, email, company and message URI-encoded into the draft. Without JavaScript, it still opens a draft addressed to the mailbox.
 
-The visible Impressum contains the supplied name and postal address, with a normal clickable LinkedIn URL. Unique four-character alphanumeric spans separate the name and address characters, including spaces. These spans match the black background, use a 0.001px font, occupy no layout space and are excluded from screen readers. This deters basic text scraping; a crawler that interprets the markup can still recover the address.
+The visible Impressum contains the supplied name and postal address, with a clickable LinkedIn URL. The characters of each name and address line are shuffled in the HTML, and each carries its true position as a CSS `order`, so the line reads normally on screen while the markup and any text copied from the page stay scrambled. Screen readers follow the markup and therefore read the scrambled order. This defeats text scraping; a crawler that renders the page or interprets `order` can still recover the address. The LinkedIn URL is shuffled the same way inside a link without an `href`; `src/main.ts` rebuilds the `href` from the characters' order, so without JavaScript the URL is readable but not clickable. To change the address, generate new lines with `node scripts/scramble-impressum.mjs "Name" "Street 1" "12345 City"` and paste them into `index.html`.
 
 ## Verification
 
@@ -70,7 +70,7 @@ This command builds production files, then runs Playwright against the developme
 
 Playwright uses locally installed Google Chrome. The inline contact suite uses a fake public key, mocked hCaptcha SDK and intercepted Web3Forms requests at all three URL depths. It covers CAPTCHA state, on-page submission, duplicate prevention, retry and preserved text without sending email. Baseline and native fallback fixtures clear the access key. Other checks cover the three-section structure, exact hero copy and sequential reveal, direct-email drafts, reduced motion, mobile navigation, viewport widths from 320px to 1920px, automated WCAG checks, deployment asset loading, identical screenshots across environments, and particle cursor scattering. To use another browser, adjust `playwright.config.ts` and install that Playwright browser. Screenshots and traces are written to ignored `test-results/`.
 
-The experience tests also cover all four languages, language persistence, translated validation and form requests, the descending and rotating side mirror, its retained reflection and solid housing, interactive diagram keyboard controls, the finite particle transition and interruption by a change to the device's reduced-motion preference, and translated desktop/mobile layouts.
+The experience tests also cover all four languages, language persistence, translated validation and form requests, the rotating side mirror, its retained reflection and solid housing, interactive diagram keyboard controls, the finite particle transition and interruption by a change to the device's reduced-motion preference, and translated desktop/mobile layouts.
 
 For visual review, start the local development server, then run:
 
@@ -80,7 +80,7 @@ node scripts/review-artwork.mjs
 
 This captures desktop and mobile page layouts plus contact sheets of all seven sculptures at a fixed camera pose. The images are saved in `test-results/`, alongside per-part render timings printed to the terminal.
 
-For the story, method and mirror reveal, run `node scripts/review-experience.mjs` against the development server. It captures the new layouts, translated method views and a five-frame logo sequence covering descent, landing, rotation and the final pose in `test-results/`.
+For the story, method and mirror reveal, run `node scripts/review-experience.mjs` against the development server. It captures the new layouts, translated method views and a five-frame logo sequence covering the edge-on start, the rotation and the final pose in `test-results/`.
 
 ## Assets and reference
 

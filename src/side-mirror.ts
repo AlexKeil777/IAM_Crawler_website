@@ -135,7 +135,7 @@ export class SideMirror {
   }
 
   render(yaw: number, pitch: number) {
-    // Descent moves the parent only; the solid assembly does not need rebuilding.
+    // An unchanged pose, as in the pause before the turn, needs no rebuilding.
     if (yaw === this.lastYaw && pitch === this.lastPitch) return;
     this.lastYaw = yaw;
     this.lastPitch = pitch;

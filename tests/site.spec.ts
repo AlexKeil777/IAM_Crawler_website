@@ -28,10 +28,8 @@ test("the page has three focused sections and the requested hero copy", async ({
   await page.goto("./");
   await expect(page.locator("main > section")).toHaveCount(3);
   await expect(page.locator("#hero-title .crawl-line .line-text")).toHaveText([
-    "Crawl efficiently",
-    "Crawl reliably",
-    "Crawl flexibly",
-    "Crawl intelligently",
+    "AI-powered crawling",
+    "of automotive pricing data",
   ]);
   for (const [index, line] of (
     await page.locator("#hero-title .crawl-line").all()
@@ -93,7 +91,7 @@ test("hero lines finish revealing in order and reduced motion shows all immediat
             state.crawlRevealOrder.push({ index, time });
           }
         });
-      if (state.crawlRevealOrder.length < 4) requestAnimationFrame(observe);
+      if (state.crawlRevealOrder.length < 2) requestAnimationFrame(observe);
     };
     requestAnimationFrame(observe);
   });
@@ -110,15 +108,13 @@ test("hero lines finish revealing in order and reduced motion shows all immediat
         ),
       { timeout: 12000 },
     )
-    .toEqual([0, 1, 2, 3]);
+    .toEqual([0, 1]);
   const times = await page.evaluate(() =>
     (
       window as typeof window & { crawlRevealOrder: { time: number }[] }
     ).crawlRevealOrder.map((entry) => entry.time),
   );
   expect(times[1]).toBeGreaterThan(times[0]);
-  expect(times[2]).toBeGreaterThan(times[1]);
-  expect(times[3]).toBeGreaterThan(times[2]);
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-motion", "paused");
@@ -408,4 +404,43 @@ test("page has no accessibility violations or runtime errors", async ({
     });
   }
   expect(errors).toEqual([]);
+});
+
+test("the Impressum reads normally on screen but is scrambled in the markup and when copied", async ({
+  page,
+}) => {
+  await page.goto("./");
+  const lines = await page.locator("#impressum .impressum-line, #impressum .impressum-linkedin").evaluateAll((elements) =>
+    elements.map((line) => {
+      const spans = [...line.querySelectorAll("span")].sort((a, b) => Number(a.style.order) - Number(b.style.order));
+      const boxes = spans.map((span) => span.getBoundingClientRect());
+      const selection = getSelection()!;
+      selection.selectAllChildren(line);
+      return {
+        shown: spans.map((span) => span.textContent).join(""),
+        markup: line.textContent || "",
+        copied: selection.toString().replace(/\s/g, ""),
+        // Each character sits to the right of the one before it, on one row.
+        leftToRight: boxes.every((box, index) => index === 0 || (box.left >= boxes[index - 1].right - 0.5 && box.top === boxes[0].top)),
+        spacesKeepWidth: spans.every((span, index) => span.textContent !== " " || boxes[index].width > 1),
+      };
+    }),
+  );
+  expect(lines).toHaveLength(4);
+  // The link works, but only script assembles its address.
+  await expect(page.locator(".impressum-linkedin")).toHaveAttribute("href", `https://${lines[3].shown}`);
+  expect(lines[3].shown).toMatch(/^www\.linkedin\.com\/in\/\w+$/);
+  const source = await (await page.request.get("./")).text();
+  expect(source).not.toContain("linkedin.com");
+  for (const line of lines) {
+    expect(line.shown.length).toBeGreaterThan(5);
+    expect(line.leftToRight).toBe(true);
+    expect(line.spacesKeepWidth).toBe(true);
+    expect([...line.markup].sort().join("")).toBe([...line.shown].sort().join(""));
+    // No four neighbouring characters survive in the markup or a copied selection.
+    const packed = line.shown.replace(/\s/g, "");
+    for (let index = 0; index + 4 <= line.shown.length; index++) expect(line.markup).not.toContain(line.shown.slice(index, index + 4));
+    for (let index = 0; index + 4 <= packed.length; index++) expect(line.copied).not.toContain(packed.slice(index, index + 4));
+  }
+  await expect(page.locator(".impressum-noise")).toHaveCount(0);
 });

@@ -47,7 +47,7 @@ document.addEventListener("keydown", (event) => {
 window.matchMedia("(min-width: 621px)").addEventListener("change", (event) => { if (event.matches) closeMenu(); });
 menuLabel();
 
-// Translations have different lengths. Fit all four lines together to preserve
+// Translations have different lengths. Fit the lines together to preserve
 // their hierarchy without clipping long German, Italian or Russian headlines.
 const heroTitle = document.querySelector<HTMLElement>("#hero-title")!;
 function fitHero() {
@@ -71,6 +71,14 @@ window.addEventListener("resize", () => {
   resizeFrame = requestAnimationFrame(fitHero);
 });
 void document.fonts.ready.then(fitHero);
+
+// The LinkedIn address is shuffled in the markup like the Impressum lines.
+// Rebuild the working link from the characters' on-screen order.
+const linkedin = document.querySelector<HTMLAnchorElement>(".impressum-linkedin")!;
+linkedin.href = "https://" + [...linkedin.querySelectorAll<HTMLElement>("span")]
+  .sort((a, b) => Number(a.style.order) - Number(b.style.order))
+  .map((span) => span.textContent)
+  .join("");
 
 const form = document.querySelector<HTMLFormElement>("#contact-form")!;
 const status = document.querySelector<HTMLElement>("#contact-status")!;
